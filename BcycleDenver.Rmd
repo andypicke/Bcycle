@@ -2,7 +2,9 @@
 title: "How Does Weather Affect Denver Bcycle Usage?"
 author: "Andy Pickering"
 date: "May 18, 2016"
-output: html_document
+output: 
+  html_document: 
+    keep_md: yes
 ---
 
 ## 
@@ -135,9 +137,47 @@ qplot(wea$Max.TemperatureF,tot_rides_daily,xlab="Max Temp",ylab="Total Rides",ma
 
 ```
 
+## Look at how ride durations change w/ temperature.
+
+```{r Ride Durations for different temp ranges}
+# Need to add the daily temp to each bcyc ride
+for (i in seq_along(yday(wea$MST))){
+        ig<-which(bcyc$yday == yday(wea$MST)[i])
+        bcyc$temp[ig]<-wea$Max.TemperatureF[i]
+}
+
+
+tlim<-40
+par(mfrow=c(1,3))
+ig <- which(bcyc$temp<30 & bcyc$Duration..Minutes.<tlim)
+hist(bcyc$Duration..Minutes.[ig],main="temp<30",xlab="Duration (min)")
+rug(bcyc$Duration..Minutes.[ig])
+abline(v=median(bcyc$Duration..Minutes.[ig]),col="red")
+abline(v=mean(bcyc$Duration..Minutes.[ig]),col="blue")
+
+ig <- which(bcyc$temp>30 & bcyc$temp<60 & bcyc$Duration..Minutes.<tlim)
+hist(bcyc$Duration..Minutes.[ig],main="30<temp<60",xlab="Duration (min)")
+rug(bcyc$Duration..Minutes.[ig])
+abline(v=median(bcyc$Duration..Minutes.[ig]),col="red")
+abline(v=mean(bcyc$Duration..Minutes.[ig]),col="blue")
+
+ig <- which( bcyc$temp>60 & bcyc$Duration..Minutes.<tlim)
+hist(bcyc$Duration..Minutes.[ig],main="temp>60",xlab="Duration (min)")
+rug(bcyc$Duration..Minutes.[ig])
+abline(v=median(bcyc$Duration..Minutes.[ig]),col="red")
+abline(v=mean(bcyc$Duration..Minutes.[ig]),col="blue")
+
+```
+
+
 #Conclusions:  
 - The total number of Denver Bcycle rides has a strong seasonal cycle, peaking around August and minimum around January.  
 - The total number of Denver Bcycle rides per month is strongly correlated with the monthly mean of max temperatures.  
 - Below about 30 deg and above 80 deg, the number of rides is less dependent on further decreasing(increasing) temperature.  
 - The mean and median ride durations tend to be larger for increasing temperatures.  
+
+# Follow-up Questions:  
+- Do all years look the same?  
+- Does the relationship between weather and rides look different for different types of passes (ie annual vs 24 hour)?  
+- Is there a stronger correlation with precip on shorter timescales (hourly?)?
 
