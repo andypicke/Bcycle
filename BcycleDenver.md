@@ -1,8 +1,8 @@
 # How Does Weather Affect Denver Bcycle Usage?
 Andy Pickering  
-May 18, 2016  
+May 25, 2016  
 
-## 
+## <https://github.com/andypicke/Bcycle>
 
 
 ```r
@@ -23,7 +23,7 @@ library(lubridate)
 ##     date
 ```
 
-First read in the data, which I have downloaded already from <https://denver.bcycle.com/company>.
+First read in the data for 2015, which I have downloaded already from <https://denver.bcycle.com/company>. Note: I tried to read in the xlsx file using the 'xlsx' package, but it didn't work. Instead I just opened excel and saved the file as a csv.
 
 ```r
 bcyc<-read.csv("Bcyc2015.csv")
@@ -71,7 +71,7 @@ bcyc$dt_ret<-as.POSIXct( strptime(paste(bcyc$Return.Date,bcyc$Return.Time),"%m/%
 ```
 
 
-## Now I want to compute the total rides per month and see what kind of seasonal cycle there is.
+## First I want to compute the total rides per month and see what kind of seasonal cycle there is.
 
 ```r
 # List of months
@@ -93,11 +93,11 @@ qplot(bcyc_monthly$monthID,bcyc_monthly$rides,xlab="Month",ylab="Total Rides",ma
 
 ![](BcycleDenver_files/figure-html/unnamed-chunk-4-1.png)<!-- -->
   
-So we can see that the total rides peaks around August, and is lowest around December. This is probably related to the weather, let's get some weather data and check this out. I'm using data downloaded from <www.wunderground.com>.
+So we can see that the total rides peaks around August, and is lowest around December. This is probably related to the weather, let's get some weather data and check this out. I'm using data downloaded from <https://www.wunderground.com>.
 
 
 ```r
-# daily for 1 year
+# Daily weather data for 2015
 url<-"https://www.wunderground.com/history/airport/KDEN/2015/1/1/CustomHistory.html?dayend=31&monthend=12&yearend=2015&req_city=&req_state=&req_statename=&reqdb.zip=&reqdb.magic=&reqdb.wmo=&format=1"
 
 download.file(url,"DenWeather2015.csv")

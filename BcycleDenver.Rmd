@@ -1,13 +1,13 @@
 ---
 title: "How Does Weather Affect Denver Bcycle Usage?"
 author: "Andy Pickering"
-date: "May 18, 2016"
+date: "May 25, 2016"
 output: 
   html_document: 
     keep_md: yes
 ---
 
-## 
+## <https://github.com/andypicke/Bcycle>
 
 ```{r echo=TRUE}
 rm(list=ls())
@@ -16,7 +16,7 @@ library(ggplot2)
 library(lubridate)
 ```
 
-First read in the data, which I have downloaded already from <https://denver.bcycle.com/company>.
+First read in the data for 2015, which I have downloaded already from <https://denver.bcycle.com/company>. Note: I tried to read in the xlsx file using the 'xlsx' package, but it didn't work. Instead I just opened excel and saved the file as a csv.
 ```{r ReadData}
 bcyc<-read.csv("Bcyc2015.csv")
 head(bcyc)
@@ -37,7 +37,7 @@ bcyc$dt_ret<-as.POSIXct( strptime(paste(bcyc$Return.Date,bcyc$Return.Time),"%m/%
 ```
 
 
-## Now I want to compute the total rides per month and see what kind of seasonal cycle there is.
+## First I want to compute the total rides per month and see what kind of seasonal cycle there is.
 ```{r }
 # List of months
 month_list <- c("January","February","March","April","May","June","July","August","September","October","November","December")
@@ -56,10 +56,10 @@ bcyc_monthly <- data.frame(rides=tot_rides_month,month=month_list,monthID=1:12)
 qplot(bcyc_monthly$monthID,bcyc_monthly$rides,xlab="Month",ylab="Total Rides",main="Total Rides by Month: 2015",geom=c("point","smooth"))
 ```  
   
-So we can see that the total rides peaks around August, and is lowest around December. This is probably related to the weather, let's get some weather data and check this out. I'm using data downloaded from <www.wunderground.com>.
+So we can see that the total rides peaks around August, and is lowest around December. This is probably related to the weather, let's get some weather data and check this out. I'm using data downloaded from <https://www.wunderground.com>.
 
 ```{r GetWeather}
-# daily for 1 year
+# Daily weather data for 2015
 url<-"https://www.wunderground.com/history/airport/KDEN/2015/1/1/CustomHistory.html?dayend=31&monthend=12&yearend=2015&req_city=&req_state=&req_statename=&reqdb.zip=&reqdb.magic=&reqdb.wmo=&format=1"
 
 download.file(url,"DenWeather2015.csv")
