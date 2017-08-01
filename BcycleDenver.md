@@ -2,7 +2,11 @@
 Andy Pickering  
 Aug 1, 2017  
 
-## <https://github.com/andypicke/Bcycle>
+## Introduction
+
+
+## Bcycle Data
+- <https://github.com/andypicke/Bcycle>
 
 
 ```r
@@ -59,8 +63,6 @@ nr
 ## [1] 363002
 ```
 
-So we have 363002 observations (rides) in this dataset.
-
 
 
 ```r
@@ -90,12 +92,13 @@ str(bcyc)
 # add a new column of class Posixct with date/time comined
 bcyc$dt_chkout<-as.POSIXct( strptime(paste(bcyc$Checkout.Date,bcyc$Checkout.Time),"%m/%d/%y %H:%M:%S"))
 bcyc$dt_ret<-as.POSIXct( strptime(paste(bcyc$Return.Date,bcyc$Return.Time),"%m/%d/%y %H:%M:%S"))
+
+bcyc$month <- month(bcyc$dt_chkout)
 ```
 
 
 
 ```r
-bcyc$month <- month(bcyc$dt_chkout)
 bcyc %>% group_by(month) %>% count() %>% ggplot(aes(x=month,y=n)) +geom_point() + geom_line() + geom_smooth()
 ```
 
@@ -119,7 +122,7 @@ bcyc %>% group_by(month) %>% count() %>% ggplot(aes(x=month,y=n)) +geom_point() 
 
 
 
-  
+## Weather Data
 So we can see that the total rides peaks around August, and is lowest around December. This is probably related to the weather, let's get some weather data and check this out. I'm using data downloaded from <https://www.wunderground.com>.
 
 
@@ -208,16 +211,27 @@ wea %>% group_by(month) %>% summarise(Tavg = mean(`Mean.TemperatureF`)) %>% ggpl
 ![](BcycleDenver_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
 
 
-## The MaxTemp seasonal cycle looks very similar to the month ride totals. Let's make some scatterplots to better see the correlation between weather variables and the number of rides.
+## Comparison of weather and Bcycle data 
+- The MaxTemp seasonal cycle looks very similar to the month ride totals. Let's make some scatterplots to better see the correlation between weather variables and the number of rides.
+
+
+
+### Monthly
+
 
 
 ```r
-# Group both by month, merge, and plot scatterplot
+bcyc_monthly <- bcyc %>% group_by(month) %>% count()
+wea_monthly  <- wea %>% group_by(month) %>% summarise(tavg=mean(`Mean.TemperatureF`,na.rm=TRUE))
+month_merge  <- merge(bcyc_monthly,wea_monthly) 
+ggplot(month_merge,aes(x=tavg,y=n))+geom_point() + geom_smooth(method = "lm")
 ```
 
+![](BcycleDenver_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
 
-## Let's look in a little more detail at the daily level.
 
+
+### Daily
 
 
 ```r
@@ -252,20 +266,11 @@ wea %>% ggplot(aes(yday,`Mean.TemperatureF`)) + geom_point() + geom_smooth()
 ![](BcycleDenver_files/figure-html/Compute Daily Rides-2.png)<!-- -->
 
 
-```r
-bcyc_monthly <- bcyc %>% group_by(month) %>% count()
-wea_monthly  <- wea %>% group_by(month) %>% summarise(tavg=mean(`Mean.TemperatureF`,na.rm=TRUE))
-month_merge  <- merge(bcyc_monthly,wea_monthly) 
-ggplot(month_merge,aes(x=tavg,y=n))+geom_point() + geom_smooth(method = "lm")
-```
-
-![](BcycleDenver_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
-
 
 At the daily level, the seasonal pattern is the same but there is a lot more variability, especially in the winter/spring.  
   
-### Daily Data
 
+### Rides vs Temperature 
 
 ```r
 bcyc_daily <- bcyc %>% group_by(yday) %>% count()
@@ -277,10 +282,10 @@ yday_merge %>% ggplot(aes(Mean.TemperatureF,n)) + geom_point() +  geom_smooth(co
 ## `geom_smooth()` using method = 'loess'
 ```
 
-![](BcycleDenver_files/figure-html/unnamed-chunk-9-1.png)<!-- -->
+![](BcycleDenver_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
 
 
-## Look at how ride durations change w/ temperature.
+### Ride duration vs temperature.
 
 
 ```r
@@ -315,13 +320,13 @@ abline(v=mean(bcyc$Duration..Minutes.[ig]),col="blue")
 ![](BcycleDenver_files/figure-html/Ride Durations for different temp ranges-1.png)<!-- -->
 
 
-#Conclusions:  
+## Conclusions:  
 - The total number of Denver Bcycle rides has a strong seasonal cycle, peaking around August and minimum around January.  
 - The total number of Denver Bcycle rides per month is strongly correlated with the monthly mean of max temperatures.  
 - Below about 30 deg and above 80 deg, the number of rides is less dependent on further decreasing(increasing) temperature.  
 - The mean and median ride durations tend to be larger for increasing temperatures.  
 
-# Follow-up Questions:  
+##  Follow-up Questions:  
 - Do all years look the same?  
 - Does the relationship between weather and rides look different for different types of passes (ie annual vs 24 hour)?  
 - Is there a stronger correlation with precip on shorter timescales (hourly?)?
