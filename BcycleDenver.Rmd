@@ -12,23 +12,35 @@ output:
 
 ```{r echo=TRUE}
 rm(list=ls())
-setwd("/Users/Andy/Bcycle/")
+#setwd("/Users/Andy/Bcycle/")
 library(ggplot2)
-library(lubridate)
+suppressPackageStartupMessages(library(lubridate))
+suppressPackageStartupMessages(library(dplyr))
+library(ggplot2)
 ```
 
+
 First read in the data for 2015, which I have downloaded already from <https://denver.bcycle.com/company>. Note: I tried to read in the xlsx file using the 'xlsx' package, but it didn't work. Instead I just opened excel and saved the file as a csv.
+
 ```{r ReadData}
-bcyc<-read.csv("Bcyc2015.csv")
+bcyc<-read.csv("data/Bcyc2015.csv")
 head(bcyc)
 ```
+
 
 How many rides are contained in this dataset?
 ```{r}
 nr<-nrow(bcyc)
+nr
 ```
 
 So we have `r nr` observations (rides) in this dataset.
+
+
+```{r}
+str(bcyc)
+```
+
 
 
 ```{r}
@@ -38,70 +50,51 @@ bcyc$dt_ret<-as.POSIXct( strptime(paste(bcyc$Return.Date,bcyc$Return.Time),"%m/%
 ```
 
 
-## First I want to compute the total rides per month and see what kind of seasonal cycle there is.
-```{r }
-# List of months
-month_list <- c("January","February","March","April","May","June","July","August","September","October","November","December")
-bcyc$month <- months(bcyc$dt_chkout)
-tot_rides_month <- vector(mode='numeric',length=12)
+```{r}
+bcyc$month <- month(bcyc$dt_chkout)
+bcyc %>% group_by(month) %>% count() %>% ggplot(aes(x=month,y=n)) +geom_point() + geom_line() + geom_smooth()
+```
 
-for (i in seq_along(month_list)){
-        a<-which(bcyc$month==month_list[i])
-        tot_rides_month[i] <- length(a)
-}
 
-# Make a new dataframe w/ monthy rides
-bcyc_monthly <- data.frame(rides=tot_rides_month,month=month_list,monthID=1:12)
 
-# Plot rides per month vs. month
-qplot(bcyc_monthly$monthID,bcyc_monthly$rides,xlab="Month",ylab="Total Rides",main="Total Rides by Month: 2015",geom=c("point","smooth"))
-```  
   
 So we can see that the total rides peaks around August, and is lowest around December. This is probably related to the weather, let's get some weather data and check this out. I'm using data downloaded from <https://www.wunderground.com>.
 
 ```{r GetWeather}
+
 # Daily weather data for 2015
 url<-"https://www.wunderground.com/history/airport/KDEN/2015/1/1/CustomHistory.html?dayend=31&monthend=12&yearend=2015&req_city=&req_state=&req_statename=&reqdb.zip=&reqdb.magic=&reqdb.wmo=&format=1"
 
 download.file(url,"DenWeather2015.csv")
-
 wea<-read.csv("DenWeather2015.csv")
+
 wea$MST <- as.Date(wea$MST,"%Y-%m-%d")
-wea$month <- months(wea$MST)
+wea$month <- month(wea$MS)
 
 # in Precip "T" is trace I think; change to zero for analysis
 idT<-which(wea$PrecipitationIn=="T")
 wea$PrecipitationIn[idT]<-"0.00"
 wea$PrecipitationIn <- as.numeric(as.character(wea$PrecipitationIn))
 
-# compute mean weather values per month
-maxtemp_mean_month <- vector(mode='numeric',length=12)
-mintemp_mean_month <- vector(mode='numeric',length=12)
-precip_mean_month <- vector(mode='numeric',length=12)
-maxwind_mean_month <- vector(mode='numeric',length=12)
+#wea %>% mutate(month = month(MST))
 
-for (i in seq_along(month_list)){
-        a<-which(wea$month==month_list[i])
-        maxtemp_mean_month[i] <- mean(wea$Max.TemperatureF[a])
-        mintemp_mean_month[i] <- mean(wea$Min.TemperatureF[a],na.rm = TRUE)
-        precip_mean_month[i] <- mean(wea$PrecipitationIn[a],na.rm = TRUE)
-        maxwind_mean_month[i] <- mean(wea$Max.Wind.SpeedMPH[a],na.rm = TRUE)
-}
-
-# Make a data frame w/ monthly values
-W_mon=data.frame(precip=precip_mean_month,maxtemp=maxtemp_mean_month,mintemp=mintemp_mean_month,maxwind=maxwind_mean_month,monthID=1:12,month=month_list)
+head(wea)
 
 
-qplot(W_mon$monthID,W_mon$maxtemp,geom=c("point","smooth"),xlab="Month",ylab="Max Temp",main="Maximum Temps 2015")
-qplot(W_mon$monthID,W_mon$precip,geom=c("point","smooth"),xlab="Month",ylab="Precip",main="Precip 2015")
-qplot(W_mon$monthID,W_mon$maxwind,geom=c("point","smooth"),xlab="Month",ylab="Max Wind",main="Maximum Wind 2015")
 
 ```
+
+
+```{r}
+wea %>% group_by(month) %>% summarise(Tavg = mean(`Mean.TemperatureF`)) %>% ggplot(aes(x=month,y=Tavg)) + geom_point() + geom_line() + geom_smooth()
+
+```
+
 
 ## The MaxTemp seasonal cycle looks very similar to the month ride totals. Let's make some scatterplots to better see the correlation between weather variables and the number of rides.
 
 ```{r Scatter weather vs rides}
-month_merge<-merge(bcyc_monthly,W_mon)
+month_merge<-merge(bcyc,wea)
 ggplot(dat=month_merge,aes(x=maxtemp,y=rides))+geom_point(shape=1)+geom_smooth(method=lm)
 ggplot(dat=month_merge,aes(x=precip,y=rides))+geom_point(shape=1)+geom_smooth(method=lm)
 ggplot(dat=month_merge,aes(x=maxwind,y=rides))+geom_point(shape=1)+geom_smooth(method=lm)
@@ -114,18 +107,10 @@ ggplot(dat=month_merge,aes(x=maxwind,y=rides))+geom_point(shape=1)+geom_smooth(m
 ```{r Compute Daily Rides}
 
 bcyc$yday <- yday(bcyc$dt_chkout)
-uniq_yday <- sort(unique(bcyc$yday))
+wea$yday <- yday(wea$MST)
 
-# Make an empty vector to store results in
-tot_rides_daily <- vector(mode="numeric",length=length(uniq_yday))
-
-for (i in seq_along(uniq_yday)) {
-        rm(a)
-        a<-which(bcyc$yday==uniq_yday[i])
-        tot_rides_daily[i] <- length(a)
-}
-
-qplot(uniq_yday,tot_rides_daily,xlab="Yearday",ylab="Total Rides",main="Daily total rides",geom=c("point","smooth"))
+bcyc %>% group_by(yday) %>%count()%>% ggplot(aes(yday,n)) + geom_point() + geom_smooth()
+wea %>% ggplot(aes(yday,`Mean.TemperatureF`)) + geom_point() + geom_smooth()
 
 ```
 
