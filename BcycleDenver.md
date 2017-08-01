@@ -1,32 +1,25 @@
 # How Does Weather Affect Denver Bcycle Usage?
 Andy Pickering  
-May 25, 2016  
+Aug 1, 2017  
 
 ## <https://github.com/andypicke/Bcycle>
 
 
 ```r
 rm(list=ls())
-setwd("/Users/Andy/Bcycle/")
+#setwd("/Users/Andy/Bcycle/")
 library(ggplot2)
-library(lubridate)
+suppressPackageStartupMessages(library(lubridate))
+suppressPackageStartupMessages(library(dplyr))
+library(ggplot2)
 ```
 
-```
-## 
-## Attaching package: 'lubridate'
-```
-
-```
-## The following object is masked from 'package:base':
-## 
-##     date
-```
 
 First read in the data for 2015, which I have downloaded already from <https://denver.bcycle.com/company>. Note: I tried to read in the xlsx file using the 'xlsx' package, but it didn't work. Instead I just opened excel and saved the file as a csv.
 
+
 ```r
-bcyc<-read.csv("Bcyc2015.csv")
+bcyc<-read.csv("data/Bcyc2015.csv")
 head(bcyc)
 ```
 
@@ -54,13 +47,42 @@ head(bcyc)
 ## 6 Broadway & Walnut                 14
 ```
 
+
 How many rides are contained in this dataset?
 
 ```r
 nr<-nrow(bcyc)
+nr
+```
+
+```
+## [1] 363002
 ```
 
 So we have 363002 observations (rides) in this dataset.
+
+
+
+```r
+str(bcyc)
+```
+
+```
+## 'data.frame':	363002 obs. of  12 variables:
+##  $ User.s.Program    : Factor w/ 18 levels "ArborBike","Austin B-cycle",..: 6 6 6 6 6 6 6 6 7 3 ...
+##  $ User.ID           : int  253201 120679 1027135 986934 130156 1051678 313863 395197 253997 254005 ...
+##  $ Zip               : Factor w/ 7820 levels "","0","1","10000",..: 5767 5774 4044 5768 5769 5777 5770 5796 5777 5777 ...
+##  $ Membership.Type   : Factor w/ 26 levels "24-hour (Denver B-cycle)",..: 6 6 6 21 6 1 21 6 7 26 ...
+##  $ Bike              : Factor w/ 743 levels "10","100","101",..: 105 697 208 360 346 489 103 479 74 446 ...
+##  $ Checkout.Date     : Factor w/ 365 levels "1/1/15","1/10/15",..: 117 117 117 117 117 117 117 117 117 117 ...
+##  $ Checkout.Time     : Factor w/ 1144 levels "1:00:00 PM","1:01:00 PM",..: 284 240 162 144 1102 1062 1050 1048 1046 1046 ...
+##  $ Checkout.Kiosk    : Factor w/ 87 levels "10th & Osage",..: 50 34 22 43 60 23 45 38 23 23 ...
+##  $ Return.Date       : Factor w/ 366 levels "1/1/15","1/1/16",..: 118 118 118 118 118 118 118 2 118 118 ...
+##  $ Return.Time       : Factor w/ 1323 levels "1:00:00 AM","1:00:00 PM",..: 351 307 235 215 1301 1269 1237 1038 1231 1231 ...
+##  $ Return.Kiosk      : Factor w/ 92 levels "10th & Osage",..: 20 45 32 51 39 63 51 38 24 24 ...
+##  $ Duration..Minutes.: int  6 6 9 8 10 14 4 626 3 3 ...
+```
+
 
 
 
@@ -71,27 +93,32 @@ bcyc$dt_ret<-as.POSIXct( strptime(paste(bcyc$Return.Date,bcyc$Return.Time),"%m/%
 ```
 
 
-## First I want to compute the total rides per month and see what kind of seasonal cycle there is.
 
 ```r
-# List of months
-month_list <- c("January","February","March","April","May","June","July","August","September","October","November","December")
-bcyc$month <- months(bcyc$dt_chkout)
-tot_rides_month <- vector(mode='numeric',length=12)
-
-for (i in seq_along(month_list)){
-        a<-which(bcyc$month==month_list[i])
-        tot_rides_month[i] <- length(a)
-}
-
-# Make a new dataframe w/ monthy rides
-bcyc_monthly <- data.frame(rides=tot_rides_month,month=month_list,monthID=1:12)
-
-# Plot rides per month vs. month
-qplot(bcyc_monthly$monthID,bcyc_monthly$rides,xlab="Month",ylab="Total Rides",main="Total Rides by Month: 2015",geom=c("point","smooth"))
+bcyc$month <- month(bcyc$dt_chkout)
+bcyc %>% group_by(month) %>% count() %>% ggplot(aes(x=month,y=n)) +geom_point() + geom_line() + geom_smooth()
 ```
 
-![](BcycleDenver_files/figure-html/unnamed-chunk-4-1.png)<!-- -->
+```
+## `geom_smooth()` using method = 'loess'
+```
+
+```
+## Warning: Removed 1 rows containing non-finite values (stat_smooth).
+```
+
+```
+## Warning: Removed 1 rows containing missing values (geom_point).
+```
+
+```
+## Warning: Removed 1 rows containing missing values (geom_path).
+```
+
+![](BcycleDenver_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
+
+
+
   
 So we can see that the total rides peaks around August, and is lowest around December. This is probably related to the weather, let's get some weather data and check this out. I'm using data downloaded from <https://www.wunderground.com>.
 
@@ -101,72 +128,92 @@ So we can see that the total rides peaks around August, and is lowest around Dec
 url<-"https://www.wunderground.com/history/airport/KDEN/2015/1/1/CustomHistory.html?dayend=31&monthend=12&yearend=2015&req_city=&req_state=&req_statename=&reqdb.zip=&reqdb.magic=&reqdb.wmo=&format=1"
 
 download.file(url,"DenWeather2015.csv")
-
 wea<-read.csv("DenWeather2015.csv")
+
 wea$MST <- as.Date(wea$MST,"%Y-%m-%d")
-wea$month <- months(wea$MST)
+wea$month <- month(wea$MS)
 
 # in Precip "T" is trace I think; change to zero for analysis
 idT<-which(wea$PrecipitationIn=="T")
 wea$PrecipitationIn[idT]<-"0.00"
 wea$PrecipitationIn <- as.numeric(as.character(wea$PrecipitationIn))
 
-# compute mean weather values per month
-maxtemp_mean_month <- vector(mode='numeric',length=12)
-mintemp_mean_month <- vector(mode='numeric',length=12)
-precip_mean_month <- vector(mode='numeric',length=12)
-maxwind_mean_month <- vector(mode='numeric',length=12)
+#wea %>% mutate(month = month(MST))
 
-for (i in seq_along(month_list)){
-        a<-which(wea$month==month_list[i])
-        maxtemp_mean_month[i] <- mean(wea$Max.TemperatureF[a])
-        mintemp_mean_month[i] <- mean(wea$Min.TemperatureF[a],na.rm = TRUE)
-        precip_mean_month[i] <- mean(wea$PrecipitationIn[a],na.rm = TRUE)
-        maxwind_mean_month[i] <- mean(wea$Max.Wind.SpeedMPH[a],na.rm = TRUE)
-}
-
-# Make a data frame w/ monthly values
-W_mon=data.frame(precip=precip_mean_month,maxtemp=maxtemp_mean_month,mintemp=mintemp_mean_month,maxwind=maxwind_mean_month,monthID=1:12,month=month_list)
-
-
-qplot(W_mon$monthID,W_mon$maxtemp,geom=c("point","smooth"),xlab="Month",ylab="Max Temp",main="Maximum Temps 2015")
+head(wea)
 ```
 
-![](BcycleDenver_files/figure-html/GetWeather-1.png)<!-- -->
+```
+##          MST Max.TemperatureF Mean.TemperatureF Min.TemperatureF
+## 1 2015-01-01               26                16                5
+## 2 2015-01-02               35                23               11
+## 3 2015-01-03               35                15               -5
+## 4 2015-01-04               36                13              -10
+## 5 2015-01-05               56                26               -5
+## 6 2015-01-06               49                35               20
+##   Max.Dew.PointF MeanDew.PointF Min.DewpointF Max.Humidity Mean.Humidity
+## 1             19              9            -8           92            67
+## 2             22             14             9           96            79
+## 3             25             11            -7           92            77
+## 4             13              2           -13           91            65
+## 5             34             20            -6           95            67
+## 6             36             29            19           92            73
+##   Min.Humidity Max.Sea.Level.PressureIn Mean.Sea.Level.PressureIn
+## 1           42                    30.22                     30.13
+## 2           61                    30.17                     30.02
+## 3           61                    30.40                     30.05
+## 4           38                    30.51                     30.42
+## 5           38                    30.53                     30.17
+## 6           53                    30.64                     30.35
+##   Min.Sea.Level.PressureIn Max.VisibilityMiles Mean.VisibilityMiles
+## 1                    29.99                  10                    6
+## 2                    29.79                  10                   10
+## 3                    29.79                  10                    6
+## 4                    30.20                  10                   10
+## 5                    29.99                  10                    9
+## 6                    30.22                  10                    8
+##   Min.VisibilityMiles Max.Wind.SpeedMPH Mean.Wind.SpeedMPH
+## 1                   0                15                  8
+## 2                   7                17                 10
+## 3                   0                32                 12
+## 4                   6                15                  7
+## 5                   4                37                 15
+## 6                   0                30                  9
+##   Max.Gust.SpeedMPH PrecipitationIn CloudCover   Events
+## 1                18            0.08          5 Fog-Snow
+## 2                22            0.00          2         
+## 3                37            0.08          6 Fog-Snow
+## 4                19            0.00          5         
+## 5                46            0.00          5         
+## 6                39            0.00          6 Fog-Snow
+##   WindDirDegrees.br... month
+## 1            230<br />     1
+## 2            203<br />     1
+## 3             47<br />     1
+## 4            221<br />     1
+## 5            278<br />     1
+## 6             81<br />     1
+```
+
+
 
 ```r
-qplot(W_mon$monthID,W_mon$precip,geom=c("point","smooth"),xlab="Month",ylab="Precip",main="Precip 2015")
+wea %>% group_by(month) %>% summarise(Tavg = mean(`Mean.TemperatureF`)) %>% ggplot(aes(x=month,y=Tavg)) + geom_point() + geom_line() + geom_smooth()
 ```
 
-![](BcycleDenver_files/figure-html/GetWeather-2.png)<!-- -->
-
-```r
-qplot(W_mon$monthID,W_mon$maxwind,geom=c("point","smooth"),xlab="Month",ylab="Max Wind",main="Maximum Wind 2015")
+```
+## `geom_smooth()` using method = 'loess'
 ```
 
-![](BcycleDenver_files/figure-html/GetWeather-3.png)<!-- -->
+![](BcycleDenver_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
+
 
 ## The MaxTemp seasonal cycle looks very similar to the month ride totals. Let's make some scatterplots to better see the correlation between weather variables and the number of rides.
 
 
 ```r
-month_merge<-merge(bcyc_monthly,W_mon)
-ggplot(dat=month_merge,aes(x=maxtemp,y=rides))+geom_point(shape=1)+geom_smooth(method=lm)
+# Group both by month, merge, and plot scatterplot
 ```
-
-![](BcycleDenver_files/figure-html/Scatter weather vs rides-1.png)<!-- -->
-
-```r
-ggplot(dat=month_merge,aes(x=precip,y=rides))+geom_point(shape=1)+geom_smooth(method=lm)
-```
-
-![](BcycleDenver_files/figure-html/Scatter weather vs rides-2.png)<!-- -->
-
-```r
-ggplot(dat=month_merge,aes(x=maxwind,y=rides))+geom_point(shape=1)+geom_smooth(method=lm)
-```
-
-![](BcycleDenver_files/figure-html/Scatter weather vs rides-3.png)<!-- -->
 
 
 ## Let's look in a little more detail at the daily level.
@@ -175,32 +222,63 @@ ggplot(dat=month_merge,aes(x=maxwind,y=rides))+geom_point(shape=1)+geom_smooth(m
 
 ```r
 bcyc$yday <- yday(bcyc$dt_chkout)
-uniq_yday <- sort(unique(bcyc$yday))
+wea$yday <- yday(wea$MST)
 
-# Make an empty vector to store results in
-tot_rides_daily <- vector(mode="numeric",length=length(uniq_yday))
+bcyc %>% group_by(yday) %>%count()%>% ggplot(aes(yday,n)) + geom_point() + geom_smooth()
+```
 
-for (i in seq_along(uniq_yday)) {
-        rm(a)
-        a<-which(bcyc$yday==uniq_yday[i])
-        tot_rides_daily[i] <- length(a)
-}
+```
+## `geom_smooth()` using method = 'loess'
+```
 
-qplot(uniq_yday,tot_rides_daily,xlab="Yearday",ylab="Total Rides",main="Daily total rides",geom=c("point","smooth"))
+```
+## Warning: Removed 1 rows containing non-finite values (stat_smooth).
+```
+
+```
+## Warning: Removed 1 rows containing missing values (geom_point).
 ```
 
 ![](BcycleDenver_files/figure-html/Compute Daily Rides-1.png)<!-- -->
 
-At the daily level, the seasonal pattern is the same but there is a lot more variability, especially in the winter/spring.  
-  
-  Let's look at the relationship between daily temperature and rides.
+```r
+wea %>% ggplot(aes(yday,`Mean.TemperatureF`)) + geom_point() + geom_smooth()
+```
+
+```
+## `geom_smooth()` using method = 'loess'
+```
+
+![](BcycleDenver_files/figure-html/Compute Daily Rides-2.png)<!-- -->
 
 
 ```r
-qplot(wea$Max.TemperatureF,tot_rides_daily,xlab="Max Temp",ylab="Total Rides",main="Daily total rides vs Temp",geom=c("point","smooth"))
+bcyc_monthly <- bcyc %>% group_by(month) %>% count()
+wea_monthly  <- wea %>% group_by(month) %>% summarise(tavg=mean(`Mean.TemperatureF`,na.rm=TRUE))
+month_merge  <- merge(bcyc_monthly,wea_monthly) 
+ggplot(month_merge,aes(x=tavg,y=n))+geom_point() + geom_smooth(method = "lm")
 ```
 
-![](BcycleDenver_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
+![](BcycleDenver_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
+
+
+At the daily level, the seasonal pattern is the same but there is a lot more variability, especially in the winter/spring.  
+  
+### Daily Data
+
+
+```r
+bcyc_daily <- bcyc %>% group_by(yday) %>% count()
+yday_merge <- merge(bcyc_daily,wea) %>% select(yday,n,`Mean.TemperatureF`)
+yday_merge %>% ggplot(aes(Mean.TemperatureF,n)) + geom_point() +  geom_smooth(col='red') + geom_smooth(method = "lm")
+```
+
+```
+## `geom_smooth()` using method = 'loess'
+```
+
+![](BcycleDenver_files/figure-html/unnamed-chunk-9-1.png)<!-- -->
+
 
 ## Look at how ride durations change w/ temperature.
 

@@ -1,10 +1,11 @@
 ---
 title: "How Does Weather Affect Denver Bcycle Usage?"
 author: "Andy Pickering"
-date: "May 25, 2016"
+date: "Aug 1, 2017"
 output:
   html_document:
     keep_md: yes
+    toc: yes
   pdf_document: default
 ---
 
@@ -93,11 +94,9 @@ wea %>% group_by(month) %>% summarise(Tavg = mean(`Mean.TemperatureF`)) %>% ggpl
 
 ## The MaxTemp seasonal cycle looks very similar to the month ride totals. Let's make some scatterplots to better see the correlation between weather variables and the number of rides.
 
-```{r Scatter weather vs rides}
-month_merge<-merge(bcyc,wea)
-ggplot(dat=month_merge,aes(x=maxtemp,y=rides))+geom_point(shape=1)+geom_smooth(method=lm)
-ggplot(dat=month_merge,aes(x=precip,y=rides))+geom_point(shape=1)+geom_smooth(method=lm)
-ggplot(dat=month_merge,aes(x=maxwind,y=rides))+geom_point(shape=1)+geom_smooth(method=lm)
+```{r}
+# Group both by month, merge, and plot scatterplot
+
 ```
 
 
@@ -114,14 +113,24 @@ wea %>% ggplot(aes(yday,`Mean.TemperatureF`)) + geom_point() + geom_smooth()
 
 ```
 
+```{r}
+bcyc_monthly <- bcyc %>% group_by(month) %>% count()
+wea_monthly  <- wea %>% group_by(month) %>% summarise(tavg=mean(`Mean.TemperatureF`,na.rm=TRUE))
+month_merge  <- merge(bcyc_monthly,wea_monthly) 
+ggplot(month_merge,aes(x=tavg,y=n))+geom_point() + geom_smooth(method = "lm")
+```
+
+
 At the daily level, the seasonal pattern is the same but there is a lot more variability, especially in the winter/spring.  
   
-  Let's look at the relationship between daily temperature and rides.
+### Daily Data
 
 ```{r}
-qplot(wea$Max.TemperatureF,tot_rides_daily,xlab="Max Temp",ylab="Total Rides",main="Daily total rides vs Temp",geom=c("point","smooth"))
-
+bcyc_daily <- bcyc %>% group_by(yday) %>% count()
+yday_merge <- merge(bcyc_daily,wea) %>% select(yday,n,`Mean.TemperatureF`)
+yday_merge %>% ggplot(aes(Mean.TemperatureF,n)) + geom_point() +  geom_smooth(col='red') + geom_smooth(method = "lm")
 ```
+
 
 ## Look at how ride durations change w/ temperature.
 
