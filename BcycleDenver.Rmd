@@ -11,19 +11,19 @@ output:
 
 ## Introduction
 
+This is an analysis looking at bike share ('BCycle') usage in Denver, CO, and the effect of weather. This was originally done in ?2016 . I am now (Aug 2017) re-visiting the analysis and updating code. I was just learning R at the time of the original analysis, so i'm updating and extending the analysis with my improved R skills. This project is maintained ina github repo at - <https://github.com/andypicke/Bcycle>
+.
 
-## Bcycle Data
-- <https://github.com/andypicke/Bcycle>
-
+## Clear workspace and load libraries we'll use in the analysis
 ```{r echo=TRUE}
 rm(list=ls())
-#setwd("/Users/Andy/Bcycle/")
 library(ggplot2)
 suppressPackageStartupMessages(library(lubridate))
 suppressPackageStartupMessages(library(dplyr))
-library(ggplot2)
 ```
 
+
+## Bcycle Data
 
 First read in the data for 2015, which I have downloaded already from <https://denver.bcycle.com/company>. Note: I tried to read in the xlsx file using the 'xlsx' package, but it didn't work. Instead I just opened excel and saved the file as a csv.
 
@@ -33,32 +33,94 @@ head(bcyc)
 ```
 
 
-How many rides are contained in this dataset?
+### Take a look at structure of the data
+- dates/times are Factor type and need to be converted
+- 
 ```{r}
-nr<-nrow(bcyc)
-nr
+str(bcyc)
+```
+
+
+### Modifications:
+- make column names lowercase
+- remove periods and spaces in column anmes
+- shorten some names
+- Convert dates/times to appropriate data types
+
+```{r}
+names(bcyc) <- names(bcyc) %>%
+        tolower() %>%
+        stringr::str_replace_all('[.]','_')
+head(bcyc)
+```
+
+```{r}
+bcyc$checkout_date <- lubridate::as_date(as.character(bcyc$checkout_date),'%m/%d/%y')
+bcyc$return_date  <- lubridate::as_date(as.character(bcyc$return_date),'%m/%d/%y')
+bcyc$return_time <- lubridate::parse_date_time(as.character(bcyc$return_time),'%I:%M:%S %p')
+bcyc$checkout_time <- lubridate::parse_date_time(as.character(bcyc$checkout_time),'%I:%M:%S %p')
+str(bcyc)
 ```
 
 
 ```{r}
-str(bcyc)
+bcyc$month <- lubridate::month(bcyc$checkout_date)
+bcyc$yday <- lubridate::yday(bcyc$checkout_date)
+bcyc <- arrange(bcyc,yday)
+head(bcyc)
 ```
 
 
 
 ```{r}
 # add a new column of class Posixct with date/time comined
-bcyc$dt_chkout<-as.POSIXct( strptime(paste(bcyc$Checkout.Date,bcyc$Checkout.Time),"%m/%d/%y %H:%M:%S"))
-bcyc$dt_ret<-as.POSIXct( strptime(paste(bcyc$Return.Date,bcyc$Return.Time),"%m/%d/%y %H:%M:%S"))
+#bcyc$dt_chkout<-as.POSIXct( strptime(paste(bcyc$Checkout.Date,bcyc$Checkout.Time),"%m/%d/%y %H:%M:%S"))
+#bcyc$dt_ret<-as.POSIXct( strptime(paste(bcyc$Return.Date,bcyc$Return.Time),"%m/%d/%y %H:%M:%S"))
+#bcyc$month <- month(bcyc$dt_chkout)
+```
 
-bcyc$month <- month(bcyc$dt_chkout)
 
+
+How many rides (rows) are contained in this dataset?
+```{r}
+nr<-nrow(bcyc)
+nr
+```
+
+
+### How many missing values are there?
+```{r}
 
 ```
 
 
+
+
+
+
+
+
+### Group by month and plot total # rides
 ```{r}
-bcyc %>% group_by(month) %>% count() %>% ggplot(aes(x=month,y=n)) +geom_point() + geom_line() + geom_smooth()
+bcyc %>% group_by(month) %>%
+        count() %>% 
+        ggplot(aes(x=month,y=n)) +
+        geom_point() + 
+        geom_line() + 
+        geom_smooth() +
+        xlab("Month") + ylab('# Rides') + 
+        ggtitle("Monthly Number of Bcycle rides in 2015")
+```
+
+
+### Group by yday and plot total # rides
+```{r}
+bcyc %>% group_by(yday) %>% 
+        count() %>% 
+        ggplot(aes(x=yday,y=n)) +
+        geom_point() + geom_smooth() + 
+        xlab("yday") + ylab('# Rides') + 
+        ggtitle("Daily Number of Bcycle rides in 2015")
 ```
 
 
@@ -82,17 +144,19 @@ idT<-which(wea$PrecipitationIn=="T")
 wea$PrecipitationIn[idT]<-"0.00"
 wea$PrecipitationIn <- as.numeric(as.character(wea$PrecipitationIn))
 
-#wea %>% mutate(month = month(MST))
-
 head(wea)
-
-
 
 ```
 
 
 ```{r}
-wea %>% group_by(month) %>% summarise(Tavg = mean(`Mean.TemperatureF`)) %>% ggplot(aes(x=month,y=Tavg)) + geom_point() + geom_line() + geom_smooth()
+wea %>% group_by(month) %>% 
+        summarise(Tavg = mean(`Mean.TemperatureF`)) %>% 
+        ggplot(aes(x=month,y=Tavg)) + 
+        geom_point() + 
+        geom_line() + 
+        geom_smooth() +
+        ggtitle('Monthly average temperature in 2015')
 
 ```
 
