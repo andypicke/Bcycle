@@ -125,7 +125,34 @@ bcyc %>% group_by(yday) %>%
 
 
 
+### Plot number rides by wkday
+```{r}
+bcyc$wkday <- lubridate::wday(bcyc$checkout_date,label=TRUE)
+#head(bcyc)
+bcyc %>% 
+        group_by(wkday) %>%
+        count() %>%
+        ggplot(aes(wkday,n))+
+        geom_point() +
+        geom_bar(stat='Identity',aes(fill=wkday))
+```
 
+### Plot number rides by hour
+
+```{r}
+bcyc$hour <- hour(bcyc$checkout_time)
+#head(bcyc)
+bcyc %>% 
+        group_by(hour) %>%
+        count() %>%
+        ggplot(aes(hour,n))+
+        geom_point() +
+        geom_bar(stat='Identity',aes(fill=hour)) +
+        xlab('Hour of Day') +
+        ylab('# Rides') +
+        ggtitle("Total # rides per hour for all days in 2015")
+
+```
 
 
 
@@ -275,26 +302,34 @@ At the daily level, the seasonal pattern is the same but there is a lot more var
 
 ### Rides vs Temperature 
 ```{r}
-bcyc_daily <- bcyc %>% group_by(yday) %>% count()
-yday_merge <- merge(bcyc_daily,wea) %>% select(yday,n,mean_temp,duration)
-yday_merge %>% ggplot(aes(mean_temp,n)) + geom_point() +  geom_smooth(col='red') + geom_smooth(method = "lm")
+bcyc_daily <- bcyc %>%
+        group_by(yday) %>% 
+        count()
+
+yday_merge <- merge(bcyc_daily,wea) %>% 
+        select(yday,n,mean_temp)
+
+yday_merge %>% 
+        ggplot(aes(mean_temp,n)) + 
+        geom_point() +  geom_smooth(col='red') + 
+        geom_smooth(method = "lm")
 ```
 
 
-### Ride duration vs temperature.
-- Plot ride duration vs temperature for each ride
-```{r Ride Durations for different temp ranges}
-bcyc %>%
-        filter(yday<200) %>%
-        select(yday,duration__minutes_) %>%
-        left_join(wea) %>%
-        select(yday,duration__minutes_,mean_temp) %>%
-        ggplot(aes(mean_temp,duration__minutes_)) +
-        geom_point() +
-        geom_jitter() +
-        ylim(0,100) +
-        geom_smooth(method="lm")
-```
+<!-- ### Ride duration vs temperature. -->
+<!-- - Plot ride duration vs temperature for each ride -->
+<!-- ```{r Ride Durations for different temp ranges} -->
+<!-- bcyc %>% -->
+<!--         filter(yday<200) %>% -->
+<!--         select(yday,duration__minutes_) %>% -->
+<!--         left_join(wea) %>% -->
+<!--         select(yday,duration__minutes_,mean_temp) %>% -->
+<!--         ggplot(aes(mean_temp,duration__minutes_)) + -->
+<!--         geom_point() + -->
+<!--         geom_jitter() + -->
+<!--         ylim(0,100) + -->
+<!--         geom_smooth(method="lm") -->
+<!-- ``` -->
 
 
 ## Conclusions:  
