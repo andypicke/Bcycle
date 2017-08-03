@@ -3,10 +3,10 @@ title: "How Does Weather Affect Denver Bcycle Usage?"
 author: "Andy Pickering"
 date: "Aug 1, 2017"
 output:
+  pdf_document: default
   html_document:
     keep_md: yes
     toc: yes
-  pdf_document: default
 ---
 
 ## Introduction
