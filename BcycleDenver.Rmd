@@ -150,8 +150,25 @@ head(wea)
 
 
 ```{r}
+names(wea) <- names(wea) %>%
+        tolower() %>%
+        stringr::str_replace_all('[.]','_')
+wea <- wea %>%
+        rename(max_temp=max_temperaturef,
+               mean_temp=mean_temperaturef,
+               min_temp=min_temperaturef,
+               max_dew=max_dew_pointf,
+               mean_dw=meandew_pointf,
+               min_dew=min_dewpointf,
+               wind_dir = winddirdegrees_br___)
+head(wea)
+```
+
+
+
+```{r}
 wea %>% group_by(month) %>% 
-        summarise(Tavg = mean(`Mean.TemperatureF`)) %>% 
+        summarise(Tavg = mean(mean_temp)) %>% 
         ggplot(aes(x=month,y=Tavg)) + 
         geom_point() + 
         geom_line() + 
@@ -161,32 +178,87 @@ wea %>% group_by(month) %>%
 ```
 
 
+```{r}
+wea %>% group_by(month) %>% 
+        summarise(hum_avg = mean(mean_humidity)) %>% 
+        ggplot(aes(x=month,y=hum_avg)) + 
+        geom_point() + 
+        geom_line() + 
+        geom_smooth() +
+        ggtitle('Monthly average humidity in 2015')
+
+```
+
+
+```{r}
+wea %>% group_by(month) %>% 
+        summarise(precip_avg = mean(precipitationin)) %>% 
+        ggplot(aes(x=month,y=precip_avg)) + 
+        geom_point() + 
+        geom_line() + 
+        geom_smooth() +
+        ggtitle('Monthly average precip in 2015')
+
+```
+
+
+
 ## Comparison of weather and Bcycle data 
 - The MaxTemp seasonal cycle looks very similar to the month ride totals. Let's make some scatterplots to better see the correlation between weather variables and the number of rides.
 
 
 
 ### Monthly
+- Make new data frames grouped by month
+
+```{r}
+
+bcyc_monthly <- bcyc %>% 
+        group_by(month) %>% 
+        count()
+
+wea_monthly  <- wea %>% 
+        group_by(month) %>% 
+        summarise(tavg=mean(mean_temp,na.rm=TRUE),
+        precip_avg=mean(precipitationin,na.rm=TRUE))
+
+month_merge  <- merge(bcyc_monthly,wea_monthly) 
+
+ggplot(month_merge,aes(x=tavg,y=n)) +
+        geom_point() + 
+        geom_smooth(method = "lm") +
+        ylab(" # Rides/month ") +
+        xlab(" Avg Temperature")
+```
 
 
 ```{r}
-bcyc_monthly <- bcyc %>% group_by(month) %>% count()
-wea_monthly  <- wea %>% group_by(month) %>% summarise(tavg=mean(`Mean.TemperatureF`,na.rm=TRUE))
-month_merge  <- merge(bcyc_monthly,wea_monthly) 
-ggplot(month_merge,aes(x=tavg,y=n))+geom_point() + geom_smooth(method = "lm")
-```
+ggplot(month_merge,aes(x=precip_avg,y=n)) +
+        geom_point() + 
+        geom_smooth(method = "lm") +
+        ylab(" # Rides/month ") +
+        xlab(" Avg Temperature")
 
+```
 
 
 ### Daily
 
 ```{r Compute Daily Rides}
 
-bcyc$yday <- yday(bcyc$dt_chkout)
-wea$yday <- yday(wea$MST)
+bcyc$yday <- yday(bcyc$checkout_date)
+wea$yday  <- yday(wea$MST)
 
-bcyc %>% group_by(yday) %>%count()%>% ggplot(aes(yday,n)) + geom_point() + geom_smooth()
-wea %>% ggplot(aes(yday,`Mean.TemperatureF`)) + geom_point() + geom_smooth()
+bcyc %>% 
+        group_by(yday) %>%
+        count() %>% 
+        ggplot(aes(yday,n)) + 
+        geom_point() + 
+        geom_smooth()
+
+wea %>% 
+        ggplot(aes(yday,`Mean.TemperatureF`)) + 
+        geom_point() + geom_smooth()
 
 ```
 
