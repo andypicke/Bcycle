@@ -125,6 +125,12 @@ bcyc %>% group_by(yday) %>%
 
 
 
+
+
+
+
+
+
 ## Weather Data
 So we can see that the total rides peaks around August, and is lowest around December. This is probably related to the weather, let's get some weather data and check this out. I'm using data downloaded from <https://www.wunderground.com>.
 
@@ -270,41 +276,24 @@ At the daily level, the seasonal pattern is the same but there is a lot more var
 ### Rides vs Temperature 
 ```{r}
 bcyc_daily <- bcyc %>% group_by(yday) %>% count()
-yday_merge <- merge(bcyc_daily,wea) %>% select(yday,n,mean_temp)
+yday_merge <- merge(bcyc_daily,wea) %>% select(yday,n,mean_temp,duration)
 yday_merge %>% ggplot(aes(mean_temp,n)) + geom_point() +  geom_smooth(col='red') + geom_smooth(method = "lm")
 ```
 
 
 ### Ride duration vs temperature.
-
+- Plot ride duration vs temperature for each ride
 ```{r Ride Durations for different temp ranges}
-# Need to add the daily temp to each bcyc ride
-for (i in seq_along(yday(wea$MST))){
-        ig<-which(bcyc$yday == yday(wea$MST)[i])
-        bcyc$temp[ig]<-wea$Max.TemperatureF[i]
-}
-
-
-tlim<-40
-par(mfrow=c(1,3))
-ig <- which(bcyc$temp<30 & bcyc$Duration..Minutes.<tlim)
-hist(bcyc$Duration..Minutes.[ig],main="temp<30",xlab="Duration (min)")
-rug(bcyc$Duration..Minutes.[ig])
-abline(v=median(bcyc$Duration..Minutes.[ig]),col="red")
-abline(v=mean(bcyc$Duration..Minutes.[ig]),col="blue")
-
-ig <- which(bcyc$temp>30 & bcyc$temp<60 & bcyc$Duration..Minutes.<tlim)
-hist(bcyc$Duration..Minutes.[ig],main="30<temp<60",xlab="Duration (min)")
-rug(bcyc$Duration..Minutes.[ig])
-abline(v=median(bcyc$Duration..Minutes.[ig]),col="red")
-abline(v=mean(bcyc$Duration..Minutes.[ig]),col="blue")
-
-ig <- which( bcyc$temp>60 & bcyc$Duration..Minutes.<tlim)
-hist(bcyc$Duration..Minutes.[ig],main="temp>60",xlab="Duration (min)")
-rug(bcyc$Duration..Minutes.[ig])
-abline(v=median(bcyc$Duration..Minutes.[ig]),col="red")
-abline(v=mean(bcyc$Duration..Minutes.[ig]),col="blue")
-
+bcyc %>%
+        filter(yday<200) %>%
+        select(yday,duration__minutes_) %>%
+        left_join(wea) %>%
+        select(yday,duration__minutes_,mean_temp) %>%
+        ggplot(aes(mean_temp,duration__minutes_)) +
+        geom_point() +
+        geom_jitter() +
+        ylim(0,100) +
+        geom_smooth(method="lm")
 ```
 
 
