@@ -247,7 +247,7 @@ ggplot(month_merge,aes(x=precip_avg,y=n)) +
 ```{r Compute Daily Rides}
 
 bcyc$yday <- yday(bcyc$checkout_date)
-wea$yday  <- yday(wea$MST)
+wea$yday  <- yday(wea$mst)
 
 bcyc %>% 
         group_by(yday) %>%
@@ -257,7 +257,7 @@ bcyc %>%
         geom_smooth()
 
 wea %>% 
-        ggplot(aes(yday,`Mean.TemperatureF`)) + 
+        ggplot(aes(yday,mean_temp)) + 
         geom_point() + geom_smooth()
 
 ```
@@ -270,8 +270,8 @@ At the daily level, the seasonal pattern is the same but there is a lot more var
 ### Rides vs Temperature 
 ```{r}
 bcyc_daily <- bcyc %>% group_by(yday) %>% count()
-yday_merge <- merge(bcyc_daily,wea) %>% select(yday,n,`Mean.TemperatureF`)
-yday_merge %>% ggplot(aes(Mean.TemperatureF,n)) + geom_point() +  geom_smooth(col='red') + geom_smooth(method = "lm")
+yday_merge <- merge(bcyc_daily,wea) %>% select(yday,n,mean_temp)
+yday_merge %>% ggplot(aes(mean_temp,n)) + geom_point() +  geom_smooth(col='red') + geom_smooth(method = "lm")
 ```
 
 
