@@ -127,6 +127,8 @@ bcyc %>%
 ```
 
 ### Plot number rides by hour
+- It looks like there are two peaks around morning/evening rush hour, on top of an approximately normal looking distribution.
+
 
 ```{r}
 bcyc$hour <- hour(bcyc$checkout_time)
@@ -143,6 +145,39 @@ bcyc %>%
 
 ```
 
+
+### Plot number rides by hour, but do weekdays and weekends separately
+
+
+### Weekdays
+```{r}
+bcyc %>% 
+        filter(! wkday %in% c('Sat','Sun') ) %>%
+        group_by(hour) %>%
+        count() %>%
+        ggplot(aes(hour,n))+
+        geom_point() +
+        geom_bar(stat='Identity',aes(fill=hour)) +
+        xlab('Hour of Day') +
+        ylab('# Rides') +
+        ggtitle("Total # rides per hour for week days in 2015")
+
+```
+
+### Weekends
+```{r}
+bcyc %>% 
+        filter(wkday %in% c('Sat','Sun') ) %>%
+        group_by(hour) %>%
+        count() %>%
+        ggplot(aes(hour,n))+
+        geom_point() +
+        geom_bar(stat='Identity',aes(fill=hour)) +
+        xlab('Hour of Day') +
+        ylab('# Rides') +
+        ggtitle("Total # rides per hour for weekend days in 2015")
+
+```
 
 
 
@@ -309,20 +344,6 @@ yday_merge %>%
 ```
 
 
-<!-- ### Ride duration vs temperature. -->
-<!-- - Plot ride duration vs temperature for each ride -->
-<!-- ```{r Ride Durations for different temp ranges} -->
-<!-- bcyc %>% -->
-<!--         filter(yday<200) %>% -->
-<!--         select(yday,duration__minutes_) %>% -->
-<!--         left_join(wea) %>% -->
-<!--         select(yday,duration__minutes_,mean_temp) %>% -->
-<!--         ggplot(aes(mean_temp,duration__minutes_)) + -->
-<!--         geom_point() + -->
-<!--         geom_jitter() + -->
-<!--         ylim(0,100) + -->
-<!--         geom_smooth(method="lm") -->
-<!-- ``` -->
 
 
 
