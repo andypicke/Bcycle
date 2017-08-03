@@ -24,56 +24,31 @@ First read in the data for 2015, which I have downloaded already from <https://d
 
 ```r
 bcyc<-read.csv("data/Bcyc2015.csv")
-head(bcyc)
-```
-
-```
-##   User.s.Program User.ID   Zip              Membership.Type Bike
-## 1 Denver B-cycle  253201 80202      Annual (Denver B-cycle)  212
-## 2 Denver B-cycle  120679 80209      Annual (Denver B-cycle)    9
-## 3 Denver B-cycle 1027135 60439      Annual (Denver B-cycle)  322
-## 4 Denver B-cycle  986934 80203 Annual Plus (Denver B-cycle)  482
-## 5 Denver B-cycle  130156 80204      Annual (Denver B-cycle)  466
-## 6 Denver B-cycle 1051678 80211     24-hour (Denver B-cycle)  611
-##   Checkout.Date Checkout.Time      Checkout.Kiosk Return.Date Return.Time
-## 1      12/31/15   11:51:00 PM        32nd & Pecos    12/31/15 11:57:00 PM
-## 2      12/31/15   11:29:00 PM     18th & Arapahoe    12/31/15 11:35:00 PM
-## 3      12/31/15   10:50:00 PM     16th & Broadway    12/31/15 10:59:00 PM
-## 4      12/31/15   10:41:00 PM 22nd & Pennsylvania    12/31/15 10:49:00 PM
-## 5      12/31/15    9:38:00 PM      9th & Santa Fe    12/31/15  9:48:00 PM
-## 6      12/31/15    9:18:00 PM 16th & Little Raven    12/31/15  9:32:00 PM
-##        Return.Kiosk Duration..Minutes.
-## 1    15th & Delgany                  6
-## 2   25th & Lawrence                  6
-## 3       17th & Race                  9
-## 4   33rd & Arapahoe                  8
-## 5    1st & Broadway                 10
-## 6 Broadway & Walnut                 14
 ```
 
 
 ### Take a look at structure of the data
 - dates/times are Factor type and need to be converted
-- 
 
 ```r
-str(bcyc)
+glimpse(bcyc)
 ```
 
 ```
-## 'data.frame':	363002 obs. of  12 variables:
-##  $ User.s.Program    : Factor w/ 18 levels "ArborBike","Austin B-cycle",..: 6 6 6 6 6 6 6 6 7 3 ...
-##  $ User.ID           : int  253201 120679 1027135 986934 130156 1051678 313863 395197 253997 254005 ...
-##  $ Zip               : Factor w/ 7820 levels "","0","1","10000",..: 5767 5774 4044 5768 5769 5777 5770 5796 5777 5777 ...
-##  $ Membership.Type   : Factor w/ 26 levels "24-hour (Denver B-cycle)",..: 6 6 6 21 6 1 21 6 7 26 ...
-##  $ Bike              : Factor w/ 743 levels "10","100","101",..: 105 697 208 360 346 489 103 479 74 446 ...
-##  $ Checkout.Date     : Factor w/ 365 levels "1/1/15","1/10/15",..: 117 117 117 117 117 117 117 117 117 117 ...
-##  $ Checkout.Time     : Factor w/ 1144 levels "1:00:00 PM","1:01:00 PM",..: 284 240 162 144 1102 1062 1050 1048 1046 1046 ...
-##  $ Checkout.Kiosk    : Factor w/ 87 levels "10th & Osage",..: 50 34 22 43 60 23 45 38 23 23 ...
-##  $ Return.Date       : Factor w/ 366 levels "1/1/15","1/1/16",..: 118 118 118 118 118 118 118 2 118 118 ...
-##  $ Return.Time       : Factor w/ 1323 levels "1:00:00 AM","1:00:00 PM",..: 351 307 235 215 1301 1269 1237 1038 1231 1231 ...
-##  $ Return.Kiosk      : Factor w/ 92 levels "10th & Osage",..: 20 45 32 51 39 63 51 38 24 24 ...
-##  $ Duration..Minutes.: int  6 6 9 8 10 14 4 626 3 3 ...
+## Observations: 363,002
+## Variables: 12
+## $ User.s.Program     <fctr> Denver B-cycle, Denver B-cycle, Denver B-c...
+## $ User.ID            <int> 253201, 120679, 1027135, 986934, 130156, 10...
+## $ Zip                <fctr> 80202, 80209, 60439, 80203, 80204, 80211, ...
+## $ Membership.Type    <fctr> Annual (Denver B-cycle), Annual (Denver B-...
+## $ Bike               <fctr> 212, 9, 322, 482, 466, 611, 210, 600, 180,...
+## $ Checkout.Date      <fctr> 12/31/15, 12/31/15, 12/31/15, 12/31/15, 12...
+## $ Checkout.Time      <fctr> 11:51:00 PM, 11:29:00 PM, 10:50:00 PM, 10:...
+## $ Checkout.Kiosk     <fctr> 32nd & Pecos, 18th & Arapahoe, 16th & Broa...
+## $ Return.Date        <fctr> 12/31/15, 12/31/15, 12/31/15, 12/31/15, 12...
+## $ Return.Time        <fctr> 11:57:00 PM, 11:35:00 PM, 10:59:00 PM, 10:...
+## $ Return.Kiosk       <fctr> 15th & Delgany, 25th & Lawrence, 17th & Ra...
+## $ Duration..Minutes. <int> 6, 6, 9, 8, 10, 14, 4, 626, 3, 3, 23, 6, 3,...
 ```
 
 
@@ -88,100 +63,41 @@ str(bcyc)
 names(bcyc) <- names(bcyc) %>%
         tolower() %>%
         stringr::str_replace_all('[.]','_')
-head(bcyc)
-```
 
-```
-##   user_s_program user_id   zip              membership_type bike
-## 1 Denver B-cycle  253201 80202      Annual (Denver B-cycle)  212
-## 2 Denver B-cycle  120679 80209      Annual (Denver B-cycle)    9
-## 3 Denver B-cycle 1027135 60439      Annual (Denver B-cycle)  322
-## 4 Denver B-cycle  986934 80203 Annual Plus (Denver B-cycle)  482
-## 5 Denver B-cycle  130156 80204      Annual (Denver B-cycle)  466
-## 6 Denver B-cycle 1051678 80211     24-hour (Denver B-cycle)  611
-##   checkout_date checkout_time      checkout_kiosk return_date return_time
-## 1      12/31/15   11:51:00 PM        32nd & Pecos    12/31/15 11:57:00 PM
-## 2      12/31/15   11:29:00 PM     18th & Arapahoe    12/31/15 11:35:00 PM
-## 3      12/31/15   10:50:00 PM     16th & Broadway    12/31/15 10:59:00 PM
-## 4      12/31/15   10:41:00 PM 22nd & Pennsylvania    12/31/15 10:49:00 PM
-## 5      12/31/15    9:38:00 PM      9th & Santa Fe    12/31/15  9:48:00 PM
-## 6      12/31/15    9:18:00 PM 16th & Little Raven    12/31/15  9:32:00 PM
-##        return_kiosk duration__minutes_
-## 1    15th & Delgany                  6
-## 2   25th & Lawrence                  6
-## 3       17th & Race                  9
-## 4   33rd & Arapahoe                  8
-## 5    1st & Broadway                 10
-## 6 Broadway & Walnut                 14
-```
-
-
-```r
 bcyc$checkout_date <- lubridate::as_date(as.character(bcyc$checkout_date),'%m/%d/%y')
-bcyc$return_date  <- lubridate::as_date(as.character(bcyc$return_date),'%m/%d/%y')
-bcyc$return_time <- lubridate::parse_date_time(as.character(bcyc$return_time),'%I:%M:%S %p')
+bcyc$return_date   <- lubridate::as_date(as.character(bcyc$return_date),'%m/%d/%y')
+bcyc$return_time   <- lubridate::parse_date_time(as.character(bcyc$return_time),'%I:%M:%S %p')
 bcyc$checkout_time <- lubridate::parse_date_time(as.character(bcyc$checkout_time),'%I:%M:%S %p')
-str(bcyc)
-```
 
-```
-## 'data.frame':	363002 obs. of  12 variables:
-##  $ user_s_program    : Factor w/ 18 levels "ArborBike","Austin B-cycle",..: 6 6 6 6 6 6 6 6 7 3 ...
-##  $ user_id           : int  253201 120679 1027135 986934 130156 1051678 313863 395197 253997 254005 ...
-##  $ zip               : Factor w/ 7820 levels "","0","1","10000",..: 5767 5774 4044 5768 5769 5777 5770 5796 5777 5777 ...
-##  $ membership_type   : Factor w/ 26 levels "24-hour (Denver B-cycle)",..: 6 6 6 21 6 1 21 6 7 26 ...
-##  $ bike              : Factor w/ 743 levels "10","100","101",..: 105 697 208 360 346 489 103 479 74 446 ...
-##  $ checkout_date     : Date, format: "2015-12-31" "2015-12-31" ...
-##  $ checkout_time     : POSIXct, format: "0000-01-01 23:51:00" "0000-01-01 23:29:00" ...
-##  $ checkout_kiosk    : Factor w/ 87 levels "10th & Osage",..: 50 34 22 43 60 23 45 38 23 23 ...
-##  $ return_date       : Date, format: "2015-12-31" "2015-12-31" ...
-##  $ return_time       : POSIXct, format: "0000-01-01 23:57:00" "0000-01-01 23:35:00" ...
-##  $ return_kiosk      : Factor w/ 92 levels "10th & Osage",..: 20 45 32 51 39 63 51 38 24 24 ...
-##  $ duration__minutes_: int  6 6 9 8 10 14 4 626 3 3 ...
-```
-
-
-
-```r
 bcyc$month <- lubridate::month(bcyc$checkout_date)
 bcyc$yday <- lubridate::yday(bcyc$checkout_date)
-bcyc <- arrange(bcyc,yday)
-head(bcyc)
+bcyc <- arrange(bcyc,checkout_date,checkout_time)
+
+
+glimpse(bcyc)
 ```
 
 ```
-##   user_s_program user_id   zip         membership_type bike checkout_date
-## 1 Denver B-cycle  560257 80296 Annual (Denver B-cycle)   43    2015-01-01
-## 2 Denver B-cycle  394497 80012 Annual (Denver B-cycle)  178    2015-01-01
-## 3 Denver B-cycle  431966 80209 Annual (Denver B-cycle)  519    2015-01-01
-## 4 Denver B-cycle  439411 80203 Annual (Denver B-cycle)  221    2015-01-01
-## 5 Denver B-cycle  615015 80203 Annual (Denver B-cycle)  263    2015-01-01
-## 6 Denver B-cycle  212129                Not Applicable  574    2015-01-01
-##         checkout_time  checkout_kiosk return_date         return_time
-## 1 0000-01-01 21:42:00 3rd & Milwaukee  2015-01-01 0000-01-01 21:54:00
-## 2 0000-01-01 20:50:00  15th & Delgany  2015-01-01 0000-01-01 20:55:00
-## 3 0000-01-01 18:15:00    19th & Pearl  2015-01-01 0000-01-01 18:34:00
-## 4 0000-01-01 18:03:00    1350 Larimer  2015-01-01 0000-01-01 18:14:00
-## 5 0000-01-01 17:08:00  1st & Broadway  2015-01-01 0000-01-01 17:28:00
-## 6 0000-01-01 16:02:00     Five Points  2015-01-01 0000-01-01 16:15:00
-##              return_kiosk duration__minutes_ month yday
-## 1        12th & Columbine                 12     1    1
-## 2           16th & Platte                  5     1    1
-## 3            19th & Pearl                 19     1    1
-## 4            17th & Pearl                 11     1    1
-## 5      Colfax & Columbine                 20     1    1
-## 6 Park Ave West & Tremont                 13     1    1
+## Observations: 363,002
+## Variables: 14
+## $ user_s_program     <fctr> Denver B-cycle, Denver B-cycle, Denver B-c...
+## $ user_id            <int> 233037, 481799, 560257, 615015, 212129, 468...
+## $ zip                <fctr> 80210, 80202, 80296, 80203, , 80205, 80215...
+## $ membership_type    <fctr> Annual (Denver B-cycle), Annual (Denver B-...
+## $ bike               <fctr> 361, 331, 43, 169, 900, 254, 187, 600, 361...
+## $ checkout_date      <date> 2015-01-01, 2015-01-01, 2015-01-01, 2015-0...
+## $ checkout_time      <dttm> 0000-01-01 06:24:00, 0000-01-01 07:48:00, ...
+## $ checkout_kiosk     <fctr> 11th & Emerson, Market Street Station, 12t...
+## $ return_date        <date> 2015-01-01, 2015-01-01, 2015-01-01, 2015-0...
+## $ return_time        <dttm> 0000-01-01 06:38:00, 0000-01-01 07:52:00, ...
+## $ return_kiosk       <fctr> 10th & Osage, REI, 3rd & Milwaukee, 1st & ...
+## $ duration__minutes_ <int> 14, 4, 9, 16, 20, 4, 6, 12, 133, 13, 7, 26,...
+## $ month              <dbl> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1...
+## $ yday               <dbl> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1...
 ```
 
 
 
-
-```r
-# add a new column of class Posixct with date/time comined
-#bcyc$dt_chkout<-as.POSIXct( strptime(paste(bcyc$Checkout.Date,bcyc$Checkout.Time),"%m/%d/%y %H:%M:%S"))
-#bcyc$dt_ret<-as.POSIXct( strptime(paste(bcyc$Return.Date,bcyc$Return.Time),"%m/%d/%y %H:%M:%S"))
-#bcyc$month <- month(bcyc$dt_chkout)
-```
 
 
 
@@ -215,16 +131,12 @@ bcyc %>% group_by(month) %>%
         ggplot(aes(x=month,y=n)) +
         geom_point() + 
         geom_line() + 
-        geom_smooth() +
+        geom_smooth(method='loess') +
         xlab("Month") + ylab('# Rides') + 
         ggtitle("Monthly Number of Bcycle rides in 2015")
 ```
 
-```
-## `geom_smooth()` using method = 'loess'
-```
-
-![](BcycleDenver_files/figure-html/unnamed-chunk-9-1.png)<!-- -->
+![](BcycleDenver_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
 
 
 ### Group by yday and plot total # rides
@@ -233,16 +145,14 @@ bcyc %>% group_by(month) %>%
 bcyc %>% group_by(yday) %>% 
         count() %>% 
         ggplot(aes(x=yday,y=n)) +
-        geom_point() + geom_smooth() + 
-        xlab("yday") + ylab('# Rides') + 
+        geom_point() + 
+        geom_smooth(method='loess') + 
+        xlab("yday") + 
+        ylab('# Rides') + 
         ggtitle("Daily Number of Bcycle rides in 2015")
 ```
 
-```
-## `geom_smooth()` using method = 'loess'
-```
-
-![](BcycleDenver_files/figure-html/unnamed-chunk-10-1.png)<!-- -->
+![](BcycleDenver_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
 
 
 
@@ -250,7 +160,6 @@ bcyc %>% group_by(yday) %>%
 
 ```r
 bcyc$wkday <- lubridate::wday(bcyc$checkout_date,label=TRUE)
-#head(bcyc)
 bcyc %>% 
         group_by(wkday) %>%
         count() %>%
@@ -259,7 +168,7 @@ bcyc %>%
         geom_bar(stat='Identity',aes(fill=wkday))
 ```
 
-![](BcycleDenver_files/figure-html/unnamed-chunk-11-1.png)<!-- -->
+![](BcycleDenver_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
 
 ### Plot number rides by hour
 
@@ -278,7 +187,7 @@ bcyc %>%
         ggtitle("Total # rides per hour for all days in 2015")
 ```
 
-![](BcycleDenver_files/figure-html/unnamed-chunk-12-1.png)<!-- -->
+![](BcycleDenver_files/figure-html/unnamed-chunk-9-1.png)<!-- -->
 
 
 
@@ -303,59 +212,36 @@ idT<-which(wea$PrecipitationIn=="T")
 wea$PrecipitationIn[idT]<-"0.00"
 wea$PrecipitationIn <- as.numeric(as.character(wea$PrecipitationIn))
 
-head(wea)
+glimpse(wea)
 ```
 
 ```
-##          MST Max.TemperatureF Mean.TemperatureF Min.TemperatureF
-## 1 2015-01-01               26                16                5
-## 2 2015-01-02               35                23               11
-## 3 2015-01-03               35                15               -5
-## 4 2015-01-04               36                13              -10
-## 5 2015-01-05               56                26               -5
-## 6 2015-01-06               49                35               20
-##   Max.Dew.PointF MeanDew.PointF Min.DewpointF Max.Humidity Mean.Humidity
-## 1             19              9            -8           92            67
-## 2             22             14             9           96            79
-## 3             25             11            -7           92            77
-## 4             13              2           -13           91            65
-## 5             34             20            -6           95            67
-## 6             36             29            19           92            73
-##   Min.Humidity Max.Sea.Level.PressureIn Mean.Sea.Level.PressureIn
-## 1           42                    30.22                     30.13
-## 2           61                    30.17                     30.02
-## 3           61                    30.40                     30.05
-## 4           38                    30.51                     30.42
-## 5           38                    30.53                     30.17
-## 6           53                    30.64                     30.35
-##   Min.Sea.Level.PressureIn Max.VisibilityMiles Mean.VisibilityMiles
-## 1                    29.99                  10                    6
-## 2                    29.79                  10                   10
-## 3                    29.79                  10                    6
-## 4                    30.20                  10                   10
-## 5                    29.99                  10                    9
-## 6                    30.22                  10                    8
-##   Min.VisibilityMiles Max.Wind.SpeedMPH Mean.Wind.SpeedMPH
-## 1                   0                15                  8
-## 2                   7                17                 10
-## 3                   0                32                 12
-## 4                   6                15                  7
-## 5                   4                37                 15
-## 6                   0                30                  9
-##   Max.Gust.SpeedMPH PrecipitationIn CloudCover   Events
-## 1                18            0.08          5 Fog-Snow
-## 2                22            0.00          2         
-## 3                37            0.08          6 Fog-Snow
-## 4                19            0.00          5         
-## 5                46            0.00          5         
-## 6                39            0.00          6 Fog-Snow
-##   WindDirDegrees.br... month
-## 1            230<br />     1
-## 2            203<br />     1
-## 3             47<br />     1
-## 4            221<br />     1
-## 5            278<br />     1
-## 6             81<br />     1
+## Observations: 365
+## Variables: 24
+## $ MST                       <date> 2015-01-01, 2015-01-02, 2015-01-03,...
+## $ Max.TemperatureF          <int> 26, 35, 35, 36, 56, 49, 39, 49, 29, ...
+## $ Mean.TemperatureF         <int> 16, 23, 15, 13, 26, 35, 27, 34, 22, ...
+## $ Min.TemperatureF          <int> 5, 11, -5, -10, -5, 20, 14, 19, 15, ...
+## $ Max.Dew.PointF            <int> 19, 22, 25, 13, 34, 36, 25, 29, 24, ...
+## $ MeanDew.PointF            <int> 9, 14, 11, 2, 20, 29, 15, 23, 18, 26...
+## $ Min.DewpointF             <int> -8, 9, -7, -13, -6, 19, 11, 17, 13, ...
+## $ Max.Humidity              <int> 92, 96, 92, 91, 95, 92, 96, 92, 100,...
+## $ Mean.Humidity             <int> 67, 79, 77, 65, 67, 73, 83, 63, 91, ...
+## $ Min.Humidity              <int> 42, 61, 61, 38, 38, 53, 69, 34, 81, ...
+## $ Max.Sea.Level.PressureIn  <dbl> 30.22, 30.17, 30.40, 30.51, 30.53, 3...
+## $ Mean.Sea.Level.PressureIn <dbl> 30.13, 30.02, 30.05, 30.42, 30.17, 3...
+## $ Min.Sea.Level.PressureIn  <dbl> 29.99, 29.79, 29.79, 30.20, 29.99, 3...
+## $ Max.VisibilityMiles       <int> 10, 10, 10, 10, 10, 10, 10, 10, 10, ...
+## $ Mean.VisibilityMiles      <int> 6, 10, 6, 10, 9, 8, 6, 7, 6, 8, 10, ...
+## $ Min.VisibilityMiles       <int> 0, 7, 0, 6, 4, 0, 1, 2, 0, 0, 7, 0, ...
+## $ Max.Wind.SpeedMPH         <int> 15, 17, 32, 15, 37, 30, 22, 23, 16, ...
+## $ Mean.Wind.SpeedMPH        <int> 8, 10, 12, 7, 15, 9, 8, 13, 5, 9, 8,...
+## $ Max.Gust.SpeedMPH         <int> 18, 22, 37, 19, 46, 39, 26, 27, 20, ...
+## $ PrecipitationIn           <dbl> 0.08, 0.00, 0.08, 0.00, 0.00, 0.00, ...
+## $ CloudCover                <int> 5, 2, 6, 5, 5, 6, 7, 6, 7, 5, 7, 8, ...
+## $ Events                    <fctr> Fog-Snow, , Fog-Snow, , , Fog-Snow,...
+## $ WindDirDegrees.br...      <fctr> 230<br />, 203<br />, 47<br />, 221...
+## $ month                     <dbl> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...
 ```
 
 
@@ -372,52 +258,36 @@ wea <- wea %>%
                mean_dw=meandew_pointf,
                min_dew=min_dewpointf,
                wind_dir = winddirdegrees_br___)
-head(wea)
+glimpse(wea)
 ```
 
 ```
-##          mst max_temp mean_temp min_temp max_dew mean_dw min_dew
-## 1 2015-01-01       26        16        5      19       9      -8
-## 2 2015-01-02       35        23       11      22      14       9
-## 3 2015-01-03       35        15       -5      25      11      -7
-## 4 2015-01-04       36        13      -10      13       2     -13
-## 5 2015-01-05       56        26       -5      34      20      -6
-## 6 2015-01-06       49        35       20      36      29      19
-##   max_humidity mean_humidity min_humidity max_sea_level_pressurein
-## 1           92            67           42                    30.22
-## 2           96            79           61                    30.17
-## 3           92            77           61                    30.40
-## 4           91            65           38                    30.51
-## 5           95            67           38                    30.53
-## 6           92            73           53                    30.64
-##   mean_sea_level_pressurein min_sea_level_pressurein max_visibilitymiles
-## 1                     30.13                    29.99                  10
-## 2                     30.02                    29.79                  10
-## 3                     30.05                    29.79                  10
-## 4                     30.42                    30.20                  10
-## 5                     30.17                    29.99                  10
-## 6                     30.35                    30.22                  10
-##   mean_visibilitymiles min_visibilitymiles max_wind_speedmph
-## 1                    6                   0                15
-## 2                   10                   7                17
-## 3                    6                   0                32
-## 4                   10                   6                15
-## 5                    9                   4                37
-## 6                    8                   0                30
-##   mean_wind_speedmph max_gust_speedmph precipitationin cloudcover   events
-## 1                  8                18            0.08          5 Fog-Snow
-## 2                 10                22            0.00          2         
-## 3                 12                37            0.08          6 Fog-Snow
-## 4                  7                19            0.00          5         
-## 5                 15                46            0.00          5         
-## 6                  9                39            0.00          6 Fog-Snow
-##    wind_dir month
-## 1 230<br />     1
-## 2 203<br />     1
-## 3  47<br />     1
-## 4 221<br />     1
-## 5 278<br />     1
-## 6  81<br />     1
+## Observations: 365
+## Variables: 24
+## $ mst                       <date> 2015-01-01, 2015-01-02, 2015-01-03,...
+## $ max_temp                  <int> 26, 35, 35, 36, 56, 49, 39, 49, 29, ...
+## $ mean_temp                 <int> 16, 23, 15, 13, 26, 35, 27, 34, 22, ...
+## $ min_temp                  <int> 5, 11, -5, -10, -5, 20, 14, 19, 15, ...
+## $ max_dew                   <int> 19, 22, 25, 13, 34, 36, 25, 29, 24, ...
+## $ mean_dw                   <int> 9, 14, 11, 2, 20, 29, 15, 23, 18, 26...
+## $ min_dew                   <int> -8, 9, -7, -13, -6, 19, 11, 17, 13, ...
+## $ max_humidity              <int> 92, 96, 92, 91, 95, 92, 96, 92, 100,...
+## $ mean_humidity             <int> 67, 79, 77, 65, 67, 73, 83, 63, 91, ...
+## $ min_humidity              <int> 42, 61, 61, 38, 38, 53, 69, 34, 81, ...
+## $ max_sea_level_pressurein  <dbl> 30.22, 30.17, 30.40, 30.51, 30.53, 3...
+## $ mean_sea_level_pressurein <dbl> 30.13, 30.02, 30.05, 30.42, 30.17, 3...
+## $ min_sea_level_pressurein  <dbl> 29.99, 29.79, 29.79, 30.20, 29.99, 3...
+## $ max_visibilitymiles       <int> 10, 10, 10, 10, 10, 10, 10, 10, 10, ...
+## $ mean_visibilitymiles      <int> 6, 10, 6, 10, 9, 8, 6, 7, 6, 8, 10, ...
+## $ min_visibilitymiles       <int> 0, 7, 0, 6, 4, 0, 1, 2, 0, 0, 7, 0, ...
+## $ max_wind_speedmph         <int> 15, 17, 32, 15, 37, 30, 22, 23, 16, ...
+## $ mean_wind_speedmph        <int> 8, 10, 12, 7, 15, 9, 8, 13, 5, 9, 8,...
+## $ max_gust_speedmph         <int> 18, 22, 37, 19, 46, 39, 26, 27, 20, ...
+## $ precipitationin           <dbl> 0.08, 0.00, 0.08, 0.00, 0.00, 0.00, ...
+## $ cloudcover                <int> 5, 2, 6, 5, 5, 6, 7, 6, 7, 5, 7, 8, ...
+## $ events                    <fctr> Fog-Snow, , Fog-Snow, , , Fog-Snow,...
+## $ wind_dir                  <fctr> 230<br />, 203<br />, 47<br />, 221...
+## $ month                     <dbl> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...
 ```
 
 
@@ -429,15 +299,11 @@ wea %>% group_by(month) %>%
         ggplot(aes(x=month,y=Tavg)) + 
         geom_point() + 
         geom_line() + 
-        geom_smooth() +
+        geom_smooth(method='loess') +
         ggtitle('Monthly average temperature in 2015')
 ```
 
-```
-## `geom_smooth()` using method = 'loess'
-```
-
-![](BcycleDenver_files/figure-html/unnamed-chunk-14-1.png)<!-- -->
+![](BcycleDenver_files/figure-html/unnamed-chunk-11-1.png)<!-- -->
 
 
 
@@ -447,15 +313,11 @@ wea %>% group_by(month) %>%
         ggplot(aes(x=month,y=hum_avg)) + 
         geom_point() + 
         geom_line() + 
-        geom_smooth() +
+        geom_smooth(method='loess') +
         ggtitle('Monthly average humidity in 2015')
 ```
 
-```
-## `geom_smooth()` using method = 'loess'
-```
-
-![](BcycleDenver_files/figure-html/unnamed-chunk-15-1.png)<!-- -->
+![](BcycleDenver_files/figure-html/unnamed-chunk-12-1.png)<!-- -->
 
 
 
@@ -465,15 +327,11 @@ wea %>% group_by(month) %>%
         ggplot(aes(x=month,y=precip_avg)) + 
         geom_point() + 
         geom_line() + 
-        geom_smooth() +
+        geom_smooth(method='loess') +
         ggtitle('Monthly average precip in 2015')
 ```
 
-```
-## `geom_smooth()` using method = 'loess'
-```
-
-![](BcycleDenver_files/figure-html/unnamed-chunk-16-1.png)<!-- -->
+![](BcycleDenver_files/figure-html/unnamed-chunk-13-1.png)<!-- -->
 
 
 
@@ -505,7 +363,7 @@ ggplot(month_merge,aes(x=tavg,y=n)) +
         xlab(" Avg Temperature")
 ```
 
-![](BcycleDenver_files/figure-html/unnamed-chunk-17-1.png)<!-- -->
+![](BcycleDenver_files/figure-html/unnamed-chunk-14-1.png)<!-- -->
 
 
 
@@ -517,7 +375,7 @@ ggplot(month_merge,aes(x=precip_avg,y=n)) +
         xlab(" Avg Temperature")
 ```
 
-![](BcycleDenver_files/figure-html/unnamed-chunk-18-1.png)<!-- -->
+![](BcycleDenver_files/figure-html/unnamed-chunk-15-1.png)<!-- -->
 
 
 ### Daily
@@ -532,11 +390,7 @@ bcyc %>%
         count() %>% 
         ggplot(aes(yday,n)) + 
         geom_point() + 
-        geom_smooth()
-```
-
-```
-## `geom_smooth()` using method = 'loess'
+        geom_smooth(method='loess') 
 ```
 
 ![](BcycleDenver_files/figure-html/Compute Daily Rides-1.png)<!-- -->
@@ -544,11 +398,8 @@ bcyc %>%
 ```r
 wea %>% 
         ggplot(aes(yday,mean_temp)) + 
-        geom_point() + geom_smooth()
-```
-
-```
-## `geom_smooth()` using method = 'loess'
+        geom_point() + 
+        geom_smooth(method='loess')
 ```
 
 ![](BcycleDenver_files/figure-html/Compute Daily Rides-2.png)<!-- -->
@@ -570,15 +421,14 @@ yday_merge <- merge(bcyc_daily,wea) %>%
 
 yday_merge %>% 
         ggplot(aes(mean_temp,n)) + 
-        geom_point() +  geom_smooth(col='red') + 
-        geom_smooth(method = "lm")
+        geom_point() +  
+        geom_smooth(method='loess',col='red') + 
+        geom_smooth(method = "lm") +
+        xlab("Mean Temperature") +
+        ylab("# Daily Rides") 
 ```
 
-```
-## `geom_smooth()` using method = 'loess'
-```
-
-![](BcycleDenver_files/figure-html/unnamed-chunk-19-1.png)<!-- -->
+![](BcycleDenver_files/figure-html/unnamed-chunk-16-1.png)<!-- -->
 
 
 <!-- ### Ride duration vs temperature. -->
@@ -597,11 +447,13 @@ yday_merge %>%
 <!-- ``` -->
 
 
+
+
 ## Conclusions:  
 - The total number of Denver Bcycle rides has a strong seasonal cycle, peaking around August and minimum around January.  
 - The total number of Denver Bcycle rides per month is strongly correlated with the monthly mean of max temperatures.  
 - Below about 30 deg and above 80 deg, the number of rides is less dependent on further decreasing(increasing) temperature.  
-- The mean and median ride durations tend to be larger for increasing temperatures.  
+
 
 ##  Follow-up Questions:  
 - Do all years look the same?  

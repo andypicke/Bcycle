@@ -29,15 +29,13 @@ First read in the data for 2015, which I have downloaded already from <https://d
 
 ```{r ReadData}
 bcyc<-read.csv("data/Bcyc2015.csv")
-head(bcyc)
 ```
 
 
 ### Take a look at structure of the data
 - dates/times are Factor type and need to be converted
-- 
 ```{r}
-str(bcyc)
+glimpse(bcyc)
 ```
 
 
@@ -48,36 +46,26 @@ str(bcyc)
 - Convert dates/times to appropriate data types
 
 ```{r}
+
 names(bcyc) <- names(bcyc) %>%
         tolower() %>%
         stringr::str_replace_all('[.]','_')
-head(bcyc)
-```
 
-```{r}
 bcyc$checkout_date <- lubridate::as_date(as.character(bcyc$checkout_date),'%m/%d/%y')
-bcyc$return_date  <- lubridate::as_date(as.character(bcyc$return_date),'%m/%d/%y')
-bcyc$return_time <- lubridate::parse_date_time(as.character(bcyc$return_time),'%I:%M:%S %p')
+bcyc$return_date   <- lubridate::as_date(as.character(bcyc$return_date),'%m/%d/%y')
+bcyc$return_time   <- lubridate::parse_date_time(as.character(bcyc$return_time),'%I:%M:%S %p')
 bcyc$checkout_time <- lubridate::parse_date_time(as.character(bcyc$checkout_time),'%I:%M:%S %p')
-str(bcyc)
-```
 
-
-```{r}
 bcyc$month <- lubridate::month(bcyc$checkout_date)
 bcyc$yday <- lubridate::yday(bcyc$checkout_date)
-bcyc <- arrange(bcyc,yday)
-head(bcyc)
+bcyc <- arrange(bcyc,checkout_date,checkout_time)
+
+
+glimpse(bcyc)
 ```
 
 
 
-```{r}
-# add a new column of class Posixct with date/time comined
-#bcyc$dt_chkout<-as.POSIXct( strptime(paste(bcyc$Checkout.Date,bcyc$Checkout.Time),"%m/%d/%y %H:%M:%S"))
-#bcyc$dt_ret<-as.POSIXct( strptime(paste(bcyc$Return.Date,bcyc$Return.Time),"%m/%d/%y %H:%M:%S"))
-#bcyc$month <- month(bcyc$dt_chkout)
-```
 
 
 
@@ -107,7 +95,7 @@ bcyc %>% group_by(month) %>%
         ggplot(aes(x=month,y=n)) +
         geom_point() + 
         geom_line() + 
-        geom_smooth() +
+        geom_smooth(method='loess') +
         xlab("Month") + ylab('# Rides') + 
         ggtitle("Monthly Number of Bcycle rides in 2015")
 ```
@@ -118,8 +106,10 @@ bcyc %>% group_by(month) %>%
 bcyc %>% group_by(yday) %>% 
         count() %>% 
         ggplot(aes(x=yday,y=n)) +
-        geom_point() + geom_smooth() + 
-        xlab("yday") + ylab('# Rides') + 
+        geom_point() + 
+        geom_smooth(method='loess') + 
+        xlab("yday") + 
+        ylab('# Rides') + 
         ggtitle("Daily Number of Bcycle rides in 2015")
 ```
 
@@ -128,7 +118,6 @@ bcyc %>% group_by(yday) %>%
 ### Plot number rides by wkday
 ```{r}
 bcyc$wkday <- lubridate::wday(bcyc$checkout_date,label=TRUE)
-#head(bcyc)
 bcyc %>% 
         group_by(wkday) %>%
         count() %>%
@@ -177,7 +166,7 @@ idT<-which(wea$PrecipitationIn=="T")
 wea$PrecipitationIn[idT]<-"0.00"
 wea$PrecipitationIn <- as.numeric(as.character(wea$PrecipitationIn))
 
-head(wea)
+glimpse(wea)
 
 ```
 
@@ -194,7 +183,7 @@ wea <- wea %>%
                mean_dw=meandew_pointf,
                min_dew=min_dewpointf,
                wind_dir = winddirdegrees_br___)
-head(wea)
+glimpse(wea)
 ```
 
 
@@ -205,7 +194,7 @@ wea %>% group_by(month) %>%
         ggplot(aes(x=month,y=Tavg)) + 
         geom_point() + 
         geom_line() + 
-        geom_smooth() +
+        geom_smooth(method='loess') +
         ggtitle('Monthly average temperature in 2015')
 
 ```
@@ -217,7 +206,7 @@ wea %>% group_by(month) %>%
         ggplot(aes(x=month,y=hum_avg)) + 
         geom_point() + 
         geom_line() + 
-        geom_smooth() +
+        geom_smooth(method='loess') +
         ggtitle('Monthly average humidity in 2015')
 
 ```
@@ -229,7 +218,7 @@ wea %>% group_by(month) %>%
         ggplot(aes(x=month,y=precip_avg)) + 
         geom_point() + 
         geom_line() + 
-        geom_smooth() +
+        geom_smooth(method='loess') +
         ggtitle('Monthly average precip in 2015')
 
 ```
@@ -287,11 +276,12 @@ bcyc %>%
         count() %>% 
         ggplot(aes(yday,n)) + 
         geom_point() + 
-        geom_smooth()
+        geom_smooth(method='loess') 
 
 wea %>% 
         ggplot(aes(yday,mean_temp)) + 
-        geom_point() + geom_smooth()
+        geom_point() + 
+        geom_smooth(method='loess')
 
 ```
 
@@ -311,8 +301,11 @@ yday_merge <- merge(bcyc_daily,wea) %>%
 
 yday_merge %>% 
         ggplot(aes(mean_temp,n)) + 
-        geom_point() +  geom_smooth(col='red') + 
-        geom_smooth(method = "lm")
+        geom_point() +  
+        geom_smooth(method='loess',col='red') + 
+        geom_smooth(method = "lm") +
+        xlab("Mean Temperature") +
+        ylab("# Daily Rides") 
 ```
 
 
@@ -332,14 +325,15 @@ yday_merge %>%
 <!-- ``` -->
 
 
+
+
 ## Conclusions:  
 - The total number of Denver Bcycle rides has a strong seasonal cycle, peaking around August and minimum around January.  
 - The total number of Denver Bcycle rides per month is strongly correlated with the monthly mean of max temperatures.  
 - Below about 30 deg and above 80 deg, the number of rides is less dependent on further decreasing(increasing) temperature.  
-- The mean and median ride durations tend to be larger for increasing temperatures.  
+
 
 ##  Follow-up Questions:  
-- Do all years look the same?  
+- Do other years look similar?  
 - Does the relationship between weather and rides look different for different types of passes (ie annual vs 24 hour)?  
-- Is there a stronger correlation with precip on shorter timescales (hourly?)?
 
