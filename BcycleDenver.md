@@ -171,6 +171,8 @@ bcyc %>%
 ![](BcycleDenver_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
 
 ### Plot number rides by hour
+- It looks like there are two peaks around morning/evening rush hour, on top of an approximately normal looking distribution.
+
 
 
 ```r
@@ -189,6 +191,43 @@ bcyc %>%
 
 ![](BcycleDenver_files/figure-html/unnamed-chunk-9-1.png)<!-- -->
 
+
+### Plot number rides by hour, but do weekdays and weekends separately
+
+
+### Weekdays
+
+```r
+bcyc %>% 
+        filter(! wkday %in% c('Sat','Sun') ) %>%
+        group_by(hour) %>%
+        count() %>%
+        ggplot(aes(hour,n))+
+        geom_point() +
+        geom_bar(stat='Identity',aes(fill=hour)) +
+        xlab('Hour of Day') +
+        ylab('# Rides') +
+        ggtitle("Total # rides per hour for week days in 2015")
+```
+
+![](BcycleDenver_files/figure-html/unnamed-chunk-10-1.png)<!-- -->
+
+### Weekends
+
+```r
+bcyc %>% 
+        filter(wkday %in% c('Sat','Sun') ) %>%
+        group_by(hour) %>%
+        count() %>%
+        ggplot(aes(hour,n))+
+        geom_point() +
+        geom_bar(stat='Identity',aes(fill=hour)) +
+        xlab('Hour of Day') +
+        ylab('# Rides') +
+        ggtitle("Total # rides per hour for weekend days in 2015")
+```
+
+![](BcycleDenver_files/figure-html/unnamed-chunk-11-1.png)<!-- -->
 
 
 
@@ -303,7 +342,7 @@ wea %>% group_by(month) %>%
         ggtitle('Monthly average temperature in 2015')
 ```
 
-![](BcycleDenver_files/figure-html/unnamed-chunk-11-1.png)<!-- -->
+![](BcycleDenver_files/figure-html/unnamed-chunk-13-1.png)<!-- -->
 
 
 
@@ -317,7 +356,7 @@ wea %>% group_by(month) %>%
         ggtitle('Monthly average humidity in 2015')
 ```
 
-![](BcycleDenver_files/figure-html/unnamed-chunk-12-1.png)<!-- -->
+![](BcycleDenver_files/figure-html/unnamed-chunk-14-1.png)<!-- -->
 
 
 
@@ -331,7 +370,7 @@ wea %>% group_by(month) %>%
         ggtitle('Monthly average precip in 2015')
 ```
 
-![](BcycleDenver_files/figure-html/unnamed-chunk-13-1.png)<!-- -->
+![](BcycleDenver_files/figure-html/unnamed-chunk-15-1.png)<!-- -->
 
 
 
@@ -363,7 +402,7 @@ ggplot(month_merge,aes(x=tavg,y=n)) +
         xlab(" Avg Temperature")
 ```
 
-![](BcycleDenver_files/figure-html/unnamed-chunk-14-1.png)<!-- -->
+![](BcycleDenver_files/figure-html/unnamed-chunk-16-1.png)<!-- -->
 
 
 
@@ -375,7 +414,7 @@ ggplot(month_merge,aes(x=precip_avg,y=n)) +
         xlab(" Avg Temperature")
 ```
 
-![](BcycleDenver_files/figure-html/unnamed-chunk-15-1.png)<!-- -->
+![](BcycleDenver_files/figure-html/unnamed-chunk-17-1.png)<!-- -->
 
 
 ### Daily
@@ -428,35 +467,145 @@ yday_merge %>%
         ylab("# Daily Rides") 
 ```
 
-![](BcycleDenver_files/figure-html/unnamed-chunk-16-1.png)<!-- -->
+![](BcycleDenver_files/figure-html/unnamed-chunk-18-1.png)<!-- -->
 
 
-<!-- ### Ride duration vs temperature. -->
-<!-- - Plot ride duration vs temperature for each ride -->
-<!-- ```{r Ride Durations for different temp ranges} -->
-<!-- bcyc %>% -->
-<!--         filter(yday<200) %>% -->
-<!--         select(yday,duration__minutes_) %>% -->
-<!--         left_join(wea) %>% -->
-<!--         select(yday,duration__minutes_,mean_temp) %>% -->
-<!--         ggplot(aes(mean_temp,duration__minutes_)) + -->
-<!--         geom_point() + -->
-<!--         geom_jitter() + -->
-<!--         ylim(0,100) + -->
-<!--         geom_smooth(method="lm") -->
-<!-- ``` -->
+
+## Modeling
+- How much of variance in daily # rides can be explained by a multiple linear regression?
+
+### Temperature only
+- Explains about 81% of variance
+
+```r
+mod_T <- lm(n~mean_temp,yday_merge)
+summary(mod_T)
+```
+
+```
+## 
+## Call:
+## lm(formula = n ~ mean_temp, data = yday_merge)
+## 
+## Residuals:
+##    Min     1Q Median     3Q    Max 
+## -636.2 -129.7   -1.2  124.6  767.1 
+## 
+## Coefficients:
+##              Estimate Std. Error t value Pr(>|t|)    
+## (Intercept) -280.4253    33.3134  -8.418 8.98e-16 ***
+## mean_temp     24.3400     0.6007  40.521  < 2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 209.1 on 363 degrees of freedom
+## Multiple R-squared:  0.8189,	Adjusted R-squared:  0.8185 
+## F-statistic:  1642 on 1 and 363 DF,  p-value: < 2.2e-16
+```
+
+
+### Add precipitation
+- Adding precipitation increases R^2 to 0.84.
+
+
+```r
+bcyc_daily <- bcyc %>%
+        group_by(yday) %>% 
+        count()
+
+yday_merge <- merge(bcyc_daily,wea) 
+mod2 <- lm(n~mean_temp +precipitationin, yday_merge)
+summary(mod2)
+```
+
+```
+## 
+## Call:
+## lm(formula = n ~ mean_temp + precipitationin, data = yday_merge)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -519.87 -122.40  -12.83  113.19  741.25 
+## 
+## Coefficients:
+##                  Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)     -236.2967    31.8832  -7.411 8.92e-13 ***
+## mean_temp         23.9632     0.5663  42.316  < 2e-16 ***
+## precipitationin -488.8398    69.0887  -7.076 7.75e-12 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 196.3 on 362 degrees of freedom
+## Multiple R-squared:  0.8409,	Adjusted R-squared:  0.8401 
+## F-statistic:   957 on 2 and 362 DF,  p-value: < 2.2e-16
+```
+
+
+### Add wkday
+
+```r
+yday_merge$wkday <- as.factor(wday(yday_merge$mst))
+mod3 <- lm(n~mean_temp +precipitationin + wkday, yday_merge)
+summary(mod3)
+```
+
+```
+## 
+## Call:
+## lm(formula = n ~ mean_temp + precipitationin + wkday, data = yday_merge)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -583.54 -115.73  -14.13  106.93  676.18 
+## 
+## Coefficients:
+##                  Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)     -376.6564    38.7487  -9.720  < 2e-16 ***
+## mean_temp         24.0219     0.5379  44.657  < 2e-16 ***
+## precipitationin -508.4913    65.9481  -7.710 1.27e-13 ***
+## wkday2           121.7213    36.5221   3.333 0.000950 ***
+## wkday3           128.6327    36.5393   3.520 0.000487 ***
+## wkday4           129.0912    36.5630   3.531 0.000469 ***
+## wkday5           168.0406    36.5239   4.601 5.86e-06 ***
+## wkday6           202.4229    36.5323   5.541 5.86e-08 ***
+## wkday7           217.3591    36.5370   5.949 6.45e-09 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 186.2 on 356 degrees of freedom
+## Multiple R-squared:  0.8592,	Adjusted R-squared:  0.856 
+## F-statistic: 271.5 on 8 and 356 DF,  p-value: < 2.2e-16
+```
+
+### Plot Residuals
+
+
+```r
+dfmod <- data_frame(yday=yday_merge$yday,n=yday_merge$n,preds=predict(mod3,yday_merge),resid=preds-n)
+#dfmod %>% ggplot(aes(n,preds)) +geom_point()
+
+#dfmod %>% ggplot(aes(yday,n)) +
+#        geom_point() +
+#        geom_point(aes(yday,preds,col='red'))
+
+dfmod %>% ggplot(aes(yday,resid)) +
+        geom_point()
+```
+
+![](BcycleDenver_files/figure-html/unnamed-chunk-22-1.png)<!-- -->
 
 
 
 
 ## Conclusions:  
 - The total number of Denver Bcycle rides has a strong seasonal cycle, peaking around August and minimum around January.  
-- The total number of Denver Bcycle rides per month is strongly correlated with the monthly mean of max temperatures.  
+- The total number of Denver Bcycle rides per month is strongly correlated with the monthly mean of max temperatures. 
+-  A linear regression of daily rides vs temperature explains 81% of variance. Adding precipitation increases that to about 84%.
 - Below about 30 deg and above 80 deg, the number of rides is less dependent on further decreasing(increasing) temperature.  
 
 
 ##  Follow-up Questions:  
-- Do all years look the same?  
+- Do other years look similar?  
 - Does the relationship between weather and rides look different for different types of passes (ie annual vs 24 hour)?  
-- Is there a stronger correlation with precip on shorter timescales (hourly?)?
+- Can some of the large residuals be explained by holidays or other events?
 

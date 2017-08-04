@@ -345,16 +345,66 @@ yday_merge %>%
 
 
 
+## Modeling
+- How much of variance in daily # rides can be explained by a multiple linear regression?
+
+### Temperature only
+- Explains about 81% of variance
+```{r}
+mod_T <- lm(n~mean_temp,yday_merge)
+summary(mod_T)
+```
+
+
+### Add precipitation
+- Adding precipitation increases R^2 to 0.84.
+
+```{r}
+bcyc_daily <- bcyc %>%
+        group_by(yday) %>% 
+        count()
+
+yday_merge <- merge(bcyc_daily,wea) 
+mod2 <- lm(n~mean_temp +precipitationin, yday_merge)
+summary(mod2)
+```
+
+
+### Add wkday
+```{r}
+yday_merge$wkday <- as.factor(wday(yday_merge$mst))
+mod3 <- lm(n~mean_temp +precipitationin + wkday, yday_merge)
+summary(mod3)
+
+```
+
+### Plot Residuals
+
+```{r}
+dfmod <- data_frame(yday=yday_merge$yday,n=yday_merge$n,preds=predict(mod3,yday_merge),resid=preds-n)
+#dfmod %>% ggplot(aes(n,preds)) +geom_point()
+
+#dfmod %>% ggplot(aes(yday,n)) +
+#        geom_point() +
+#        geom_point(aes(yday,preds,col='red'))
+
+dfmod %>% ggplot(aes(yday,resid)) +
+        geom_point()
+        
+```
+
 
 
 
 ## Conclusions:  
 - The total number of Denver Bcycle rides has a strong seasonal cycle, peaking around August and minimum around January.  
-- The total number of Denver Bcycle rides per month is strongly correlated with the monthly mean of max temperatures.  
+- The total number of Denver Bcycle rides per month is strongly correlated with the monthly mean of max temperatures. 
+-  A linear regression of daily rides vs temperature explains 81% of variance. Adding precipitation increases that to about 84%.
 - Below about 30 deg and above 80 deg, the number of rides is less dependent on further decreasing(increasing) temperature.  
 
 
 ##  Follow-up Questions:  
 - Do other years look similar?  
 - Does the relationship between weather and rides look different for different types of passes (ie annual vs 24 hour)?  
+- Can some of the large residuals be explained by holidays or other events?
 
